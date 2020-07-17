@@ -21,11 +21,13 @@
 #define _ASN1_DECODER_H
 
 /* FPM  - hack to handle any size_t issues */
-/*
+
 typedef long  size_t __attribute__((aligned (8)));
-*/
+
+/*
 typedef __declspec(align(8)) long;
 typedef __declspec(align(8)) size_t;
+*/
 #define unlikely(x) (x)
 
 
