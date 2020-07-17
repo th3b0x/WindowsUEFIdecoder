@@ -1,14 +1,13 @@
 [Defines]
   INF_VERSION                    = 1.25
-  BASE_NAME                      = ListCerts 
+  BASE_NAME                      = SecureBootKeyDecoder 
   FILE_GUID                      = 4ea87c51-6395-3dcd-0055-747010f3ce51
-  MODULE_TYPE                    = UEFI_APPLICATION
+  MODULE_TYPE                    = USER_DEFINED
   VERSION_STRING                 = 1.0
-  ENTRY_POINT                    = ShellCEntryLib
   VALID_ARCHITECTURES            = X64
 
 [Sources.common]
-  ListCerts.c
+  SecureBootKeyDecoder.c
   asn1_ber_decoder.c
   asn1_ber_decoder.h
   oid_registry.c
@@ -19,11 +18,8 @@
 
 [Packages]
   MdePkg/MdePkg.dec
-  ShellPkg/ShellPkg.dec
 
 [LibraryClasses]
-  ShellCEntryLib
-  ShellLib
   BaseLib
   BaseMemoryLib
   UefiLib

@@ -7,6 +7,7 @@
 //
 
 #include <Uefi.h>
+#include <stdio.h>
 
 #include <Library/UefiLib.h>
 #include <Library/ShellCEntryLib.h>
@@ -391,11 +392,11 @@ do_subject_public_key_info( void *context,
     return 0;
 }
 
-
+/*
 int
 PrintCertificates( UINT8 *data, 
                    UINTN len, 
-                   CHAR16 *name )
+                   FILE *fp )
 {
     EFI_SIGNATURE_LIST *CertList = (EFI_SIGNATURE_LIST *)data;
     EFI_SIGNATURE_DATA *Cert;
@@ -442,8 +443,63 @@ PrintCertificates( UINT8 *data,
 
     return status;
 }
+*/
+int
+PrintCertificates( UINT8 *data, 
+                   UINTN len, 
+                   FILE *fp )
+{
+	fread(data,len,1,fp);
+	
+    EFI_SIGNATURE_LIST *CertList = (EFI_SIGNATURE_LIST *)data;
+    EFI_SIGNATURE_DATA *Cert;
+    EFI_GUID gX509 = EFI_CERT_X509_GUID;
+    EFI_GUID gPKCS7 = EFI_CERT_TYPE_PKCS7_GUID;
+    EFI_GUID gRSA2048 = EFI_CERT_RSA2048_GUID;
+    BOOLEAN  CertFound = FALSE;
+    CHAR16   *ext;
+    UINTN    DataSize = len;
+    UINTN    CertCount = 0;
+    UINTN    buflen;
+    int      status = 0;
+	
+	
 
+    while ((DataSize > 0) && (DataSize >= CertList->SignatureListSize)) {
+        CertCount = (CertList->SignatureListSize - CertList->SignatureHeaderSize) / CertList->SignatureSize;
+        Cert = (EFI_SIGNATURE_DATA *) ((UINT8 *) CertList + sizeof (EFI_SIGNATURE_LIST) + CertList->SignatureHeaderSize);
 
+        // should all be X509 but just in case...
+        if (CompareGuid(&CertList->SignatureType, &gX509) == 0)
+            ext = L"X509";
+        else if (CompareGuid(&CertList->SignatureType, &gPKCS7) == 0)
+            ext = L"PKCS7";
+        else if (CompareGuid(&CertList->SignatureType, &gRSA2048) == 0)
+            ext = L"RSA2048";
+        else 
+            ext = L"Unknown";
+
+        for (UINTN Index = 0; Index < CertCount; Index++) {
+            if ( CertList->SignatureSize > 100 ) {
+                CertFound = TRUE;
+                Print(L"\nType: %s  (GUID: %g)\n", ext, &Cert->SignatureOwner);
+                buflen  = CertList->SignatureSize-sizeof(EFI_GUID);
+                status = asn1_ber_decoder(&x509_decoder, NULL, Cert->SignatureData, buflen);
+            }
+            Cert = (EFI_SIGNATURE_DATA *) ((UINT8 *) Cert + CertList->SignatureSize);
+        }
+        DataSize -= CertList->SignatureListSize;
+        CertList = (EFI_SIGNATURE_LIST *) ((UINT8 *) CertList + CertList->SignatureListSize);
+    }
+
+    if ( CertFound == FALSE ) {
+       Print(L"\nNo certificates found for this database\n");
+    }
+
+    return status;
+}
+
+/*
 EFI_STATUS
 get_variable( CHAR16 *Var, 
               UINT8 **Data, 
@@ -453,7 +509,10 @@ get_variable( CHAR16 *Var,
     EFI_STATUS Status;
 
     *Len = 0;
-
+	
+	
+	
+	
     Status = gRT->GetVariable( Var, &Owner, NULL, Len, NULL );
     if (Status != EFI_BUFFER_TOO_SMALL)
         return Status;
@@ -470,21 +529,62 @@ get_variable( CHAR16 *Var,
 
     return Status;
 }
+*/
+EFI_STATUS
+get_variable( CHAR16 *Var, 
+              UINT8 **Data, 
+              UINTN *Len,
+              FILE *fp )
+{
+    EFI_STATUS Status;
 
+    *Len = 0;
+	
+	fp = fopen(Var,"rb");
+	if(fp > 0)
+	{
+		Status = EFI_SUCCESS;
+	}
+	else
+	{
+		Status = EFI_LOAD_ERROR;
+	}
+
+	/*
+	
+    Status = gRT->GetVariable( Var, &Owner, NULL, Len, NULL );
+    if (Status != EFI_BUFFER_TOO_SMALL)
+        return Status;
+
+    *Data = AllocateZeroPool( *Len );
+    if (!Data)
+        return EFI_OUT_OF_RESOURCES;
+    
+    Status = gRT->GetVariable( Var, &Owner, NULL, Len, *Data );
+    if (Status != EFI_SUCCESS) {
+        FreePool( *Data );
+        *Data = NULL;
+    }*/
+
+    return Status;
+}
 
 EFI_STATUS
 OutputVariable( CHAR16 *Var, 
-                EFI_GUID Owner ) 
+                EFI_GUID Owner,
+				CHAR16 *filepath
+				) 
 {
     EFI_STATUS Status = EFI_SUCCESS;
-    UINT8 *Data;
-    UINTN Len;
+    UINT8 *Data = calloc(8000,sizeof(char)); //TODO: hardcoding because I just want to process the DBX update for now
+    UINTN Len = 8000;
+	FILE *fp;
 
-    Status = get_variable( Var, &Data, &Len, Owner );
+    Status = get_variable( filepath, &Data, &Len, fp );
     if (Status == EFI_SUCCESS) {
-        Print(L"\nVARIABLE: %s  (size: %d)\n", Var, Len);
-        PrintCertificates( Data, Len, Var );
-        FreePool( Data );
+        Print(L"\nFILEPATH: %s  (pointer: %p)\n", filepath, fp);
+        PrintCertificates( Data, Len, fp );
+        
     } else if (Status == EFI_NOT_FOUND) {
 #ifdef DEBUG
         Print(L"Variable %s not found\n", Var);
@@ -493,6 +593,7 @@ OutputVariable( CHAR16 *Var,
 #endif
     } else 
         Print(L"ERROR: Failed to get variable %s. Status Code: %d\n", Var, Status);
+	FreePool( Data );
 
     return Status;
 }
@@ -505,21 +606,30 @@ Usage( BOOLEAN ErrorMsg )
         Print(L"ERROR: Unknown option(s).\n");
     }
 
-    Print(L"Usage: ListCerts [ -pk | -kek | -db | -dbx ]\n");
-    Print(L"       ListCerts [-V | --version]\n");
+    Print(L"Usage: ListCerts FilePath\n");
 }
 
 
-INTN
-EFIAPI
-ShellAppMain( UINTN Argc, 
+INT
+Main( UINTN Argc, 
               CHAR16 **Argv )
 {
     EFI_STATUS Status = EFI_SUCCESS;
     EFI_GUID   gSIGDB = EFI_IMAGE_SECURITY_DATABASE_GUID;
     EFI_GUID   owners[] = { EFI_GLOBAL_VARIABLE, EFI_GLOBAL_VARIABLE, gSIGDB, gSIGDB };
     CHAR16     *variables[] = { L"PK", L"KEK", L"db", L"dbx" };
+	CHAR16     *filepath;
 
+	if (Argc == 2)
+	{
+		filepath = Argv[1];
+		Status = OutputVariable(variables[2],owners[2], *filepath);
+	}
+	else
+	{
+		Usage(TRUE);
+	}
+	/*
     if (Argc == 1) {
         for (UINT8 i = 0; i < ARRAY_SIZE(owners); i++) {
             Status = OutputVariable(variables[i], owners[i]);
@@ -546,7 +656,7 @@ ShellAppMain( UINTN Argc,
         }
     } else if (Argc > 2) {
         Usage(TRUE);
-    }
+    }*/
 
     return Status;
 }
