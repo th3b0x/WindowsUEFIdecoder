@@ -610,8 +610,9 @@ Usage( BOOLEAN ErrorMsg )
 }
 
 
-INT
-Main( UINTN Argc, 
+INTN
+EFIAPI
+ShellAppMain( UINTN Argc, 
               CHAR16 **Argv )
 {
     EFI_STATUS Status = EFI_SUCCESS;

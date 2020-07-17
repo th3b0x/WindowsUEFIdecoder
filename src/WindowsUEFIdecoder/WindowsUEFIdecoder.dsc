@@ -1,7 +1,7 @@
 
 [Defines]
   PLATFORM_NAME                  = WindowsUEFIdecoder
-  PLATFORM_GUID                  = 0458dade-8b6e-4e45-b773-1b27cbda3e06
+  PLATFORM_GUID                  = 312f58b3-b762-40ac-9f06-9570c99dbd03
   PLATFORM_VERSION               = 0.01
   DSC_SPECIFICATION              = 0x00010006
   OUTPUT_DIRECTORY               = Build/WindowsUEFIdecoder
