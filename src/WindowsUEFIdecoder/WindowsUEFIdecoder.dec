@@ -1,0 +1,10 @@
+
+[Defines]
+  DEC_SPECIFICATION              = 0x00010005
+  PACKAGE_NAME                   = WindowsUEFIdecoder
+  PACKAGE_GUID                   = 48797b27-79c2-402c-a65a-884b16aac63b
+  PACKAGE_VERSION                = 0.01
+
+[Guids]
+
+[PcdsFixedAtBuild]
