@@ -1,8 +1,0 @@
-﻿cl : command line warning D9025: overriding '/sdl' with '/GS-'
-  oid_registry.c
-C:\projects\WindowsUEFIdecoder\src\nonedk\WindowsUEFISecureBootDecoder\oid_registry.c(42,19): warning C4018: '<': signed/unsigned mismatch
-C:\projects\WindowsUEFIdecoder\src\nonedk\WindowsUEFISecureBootDecoder\oid_registry.c(150,60): warning C4477: 'swprintf_s' : format string '%ld' requires an argument of type 'long', but variadic argument 1 has type 'UINT64'
-C:\projects\WindowsUEFIdecoder\src\nonedk\WindowsUEFISecureBootDecoder\oid_registry.c(150,60): message : consider using '%lld' in the format string
-C:\projects\WindowsUEFIdecoder\src\nonedk\WindowsUEFISecureBootDecoder\oid_registry.c(150,60): message : consider using '%Id' in the format string
-C:\projects\WindowsUEFIdecoder\src\nonedk\WindowsUEFISecureBootDecoder\oid_registry.c(150,60): message : consider using '%I64d' in the format string
-  WindowsUEFIdecoder.vcxproj -> C:\projects\WindowsUEFIdecoder\WindowsUEFIdecoder\x64\Debug\WindowsUEFIdecoder.exe
