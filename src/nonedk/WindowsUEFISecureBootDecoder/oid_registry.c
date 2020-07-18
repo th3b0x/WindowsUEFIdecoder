@@ -156,6 +156,6 @@ Sprint_OID(const void *data, long datasize, CHAR16 *buffer, long bufsize)
             return -ENOBUFS;
     }
     //buffer += 1;
-    memset((buffer, 0, (origsize - bufutil- 1));
+    //memset((buffer, 0, (origsize - bufutil- 1));
     return ret;
 }
