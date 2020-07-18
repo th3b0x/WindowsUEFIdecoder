@@ -18,10 +18,14 @@
  */
 
 #include "UefiBaseType.h"
+#include <stdlib.h>
 #include <stdio.h>
 #include "asn1_ber_decoder.h"
 #include "asn1_ber_bytecode.h"
 #include <cerrno>
+
+#define BUFF_SIZE 1000
+CHAR16 tmpbuf[BUFF_SIZE];
 
 static const unsigned char asn1_op_lengths[ASN1_OP__NR] = {
 	/*					OPC TAG JMP ACT */
@@ -480,7 +484,9 @@ tag_mismatch:
 long_tag_not_supported:
 	Errmsg = L"Long tag not supported";
 error:
-        printf(L"ERROR: %s\n", Errmsg);
+		memset(tmpbuf, 0, BUFF_SIZE);
+        sprintf_s(tmpbuf,BUFF_SIZE,L"ERROR: %ls\n", Errmsg);
+		printf_s("%s", tmpbuf);
 	return -EBADMSG;
 }
 

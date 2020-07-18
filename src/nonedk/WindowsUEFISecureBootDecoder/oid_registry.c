@@ -117,14 +117,17 @@ Sprint_OID(const void *data, long datasize, CHAR16 *buffer, long bufsize)
     UINT8 n;
     long ret;
     int count;
-
+    int bufutil = 0;
+    CHAR16* index = buffer;
+    long origsize = bufsize;
     if (v >= end)
         return -EBADMSG;
 
     n = (UINT8)*v++;
-    printf(buffer, (UINTN)bufsize, (CHAR16 *)L"%d.%d", n / 40, n % 40);
+    bufutil += swprintf_s(buffer, bufsize, L"%d.%d", n / 40, n % 40);
     ret = count = strlen(buffer);
-    buffer += count;
+    //ret = count = bufutil;
+    buffer += count; //TODO: I suspect this pointer arithmetic is what is causing the heap corruption
     bufsize -= count;
     if (bufsize == 0)
         return -ENOBUFS;
@@ -144,13 +147,15 @@ Sprint_OID(const void *data, long datasize, CHAR16 *buffer, long bufsize)
                 num |= n & 0x7f;
             } while (n & 0x80);
         }
-        printf(buffer, (UINTN)bufsize, (CHAR16 *)L".%ld", num);
+        bufutil += swprintf_s(buffer, bufsize, L".%ld", num);
         ret += count = strlen(buffer);
+        //ret += count = bufutil;
         buffer += count;
         bufsize -= count;
         if (bufsize == 0)
             return -ENOBUFS;
     }
-
+    buffer += 1;
+    memset(buffer, 0, (origsize - bufutil- 1));
     return ret;
 }

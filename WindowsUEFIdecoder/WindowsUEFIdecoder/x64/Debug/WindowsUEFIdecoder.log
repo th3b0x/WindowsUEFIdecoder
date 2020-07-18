@@ -1,0 +1,12 @@
+﻿cl : command line warning D9025: overriding '/sdl' with '/GS-'
+  oid_registry.c
+C:\projects\WindowsUEFIdecoder\src\nonedk\WindowsUEFISecureBootDecoder\oid_registry.c(42,19): warning C4018: '<': signed/unsigned mismatch
+C:\projects\WindowsUEFIdecoder\src\nonedk\WindowsUEFISecureBootDecoder\oid_registry.c(128,32): warning C4133: 'function': incompatible types - from 'CHAR16 *' to 'const char *'
+C:\projects\WindowsUEFIdecoder\src\nonedk\WindowsUEFISecureBootDecoder\oid_registry.c(128,33): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\projects\WindowsUEFIdecoder\src\nonedk\WindowsUEFISecureBootDecoder\oid_registry.c(150,48): warning C4477: 'swprintf_s' : format string '%ld' requires an argument of type 'long', but variadic argument 1 has type 'UINT64'
+C:\projects\WindowsUEFIdecoder\src\nonedk\WindowsUEFISecureBootDecoder\oid_registry.c(150,48): message : consider using '%lld' in the format string
+C:\projects\WindowsUEFIdecoder\src\nonedk\WindowsUEFISecureBootDecoder\oid_registry.c(150,48): message : consider using '%Id' in the format string
+C:\projects\WindowsUEFIdecoder\src\nonedk\WindowsUEFISecureBootDecoder\oid_registry.c(150,48): message : consider using '%I64d' in the format string
+C:\projects\WindowsUEFIdecoder\src\nonedk\WindowsUEFISecureBootDecoder\oid_registry.c(151,37): warning C4133: 'function': incompatible types - from 'CHAR16 *' to 'const char *'
+C:\projects\WindowsUEFIdecoder\src\nonedk\WindowsUEFISecureBootDecoder\oid_registry.c(151,38): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+  WindowsUEFIdecoder.vcxproj -> C:\projects\WindowsUEFIdecoder\WindowsUEFIdecoder\x64\Debug\WindowsUEFIdecoder.exe
