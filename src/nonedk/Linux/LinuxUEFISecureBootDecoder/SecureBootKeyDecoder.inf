@@ -1,0 +1,38 @@
+[Defines]
+  INF_VERSION                    = 1.25
+  BASE_NAME                      = SecureBootKeyDecoder 
+  FILE_GUID                      = 826fb4f7-c794-40a6-a51a-46d1219be0eb
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = ShellCEntryLib
+  VALID_ARCHITECTURES            = X64
+
+[Sources.common]
+  SecureBootKeyDecoder.c
+  asn1_ber_decoder.c
+  asn1_ber_decoder.h
+  oid_registry.c
+  oid_registry.h
+  oid_registry_data.h
+  x509.c
+  x509.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  ShellPkg/ShellPkg.dec
+
+[LibraryClasses]
+  stdio
+  stdlib
+  ShellCEntryLib
+  ShellLib
+  BaseLib
+  BaseMemoryLib
+  UefiLib
+
+[Protocols]
+
+[BuildOptions]
+
+[Pcd]
+
