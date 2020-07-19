@@ -121,7 +121,9 @@ Sprint_OID(const void *data, long datasize, CHAR16 *buffer, long bufsize)
     CHAR16* index = buffer;
     long origsize = bufsize;
     if (v >= end)
+    {
         return -EBADMSG;
+    }
 
     n = (UINT8)*v++;
     bufutil += swprintf_s(buffer, bufsize, L"%d.%d", n / 40, n % 40);
@@ -130,7 +132,9 @@ Sprint_OID(const void *data, long datasize, CHAR16 *buffer, long bufsize)
     //buffer += count; //TODO: I suspect this pointer arithmetic is what is causing the heap corruption
     bufsize -= count;
     if (bufsize == 0)
+    {
         return -ENOBUFS;
+    }
 
     while (v < end) {
         num = 0;
@@ -141,21 +145,26 @@ Sprint_OID(const void *data, long datasize, CHAR16 *buffer, long bufsize)
             num = n & 0x7f;
             do {
                 if (v >= end)
+                {
                     return -EBADMSG;
-                n = (UINT8)*v++;
-                num <<= 7; //TODO: this bit shift is almost certainly causing the stack corruption error
+                }
+                n = (UINT8)*v++; //TODO: this bit shift is almost certainly causing the stack corruption error
+                num <<= (UINT64)7; 
                 num |= n & 0x7f;
             } while (n & 0x80);
         }
         bufutil += swprintf_s((buffer + bufutil), bufsize, L".%ld", num);
+        
         //ret += count = strlen(buffer);
         ret += count = bufutil;
         //buffer += count;
         bufsize -= count;
         if (bufsize == 0)
+        {
             return -ENOBUFS;
+        }
     }
     //buffer += 1;
-    memset((buffer, 0, (origsize - bufutil- 1));
+    //memset((buffer + bufutil + 1), 0, (origsize - bufutil));
     return ret;
 }
