@@ -617,7 +617,7 @@ PrintCertificates( unsigned char *data,
                 buflen  = CertList->SignatureSize - sizeof(EFI_GUID);
                 status = asn1_ber_decoder(&x509_decoder, NULL, Cert->SignatureData, buflen); //x509_decoder from x509.h, which loads functions above (clever)
                 fix_print_output();
-                printf("%ls\n", outbuf);
+                wprintf(L"%s\n", outbuf);
                 memset(outbuf, 0, bufsize);
                 bufutil = 0;
             }
