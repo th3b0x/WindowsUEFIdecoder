@@ -39,7 +39,7 @@ unsigned int doalgobuff = DO_ALGORITHM_BUFF;
 unsigned int doextbuff = DO_EXTENSION_ID_BUFF;
 unsigned int doatttypebuff = DO_ATTRIBUTE_TYPE_BUFF;
 unsigned int certbuff = CERT_BUFF;
-unsigned int    wrapno = 1;
+size_t wrapno = 1;
 unsigned int sizeofchar = sizeof(char);
 
 
@@ -51,19 +51,21 @@ int CompareGuid(GUID* first, GUID* second);
 wchar_t* AsciiToUnicode(const char* Str, size_t Len);
 char* make_utc_date_string(char* s);
 void GetCertType(GUID* certGUID, wchar_t** typeName);
+/*start sourced from x509.h*/
 int do_algorithm(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
-int do_extension_id(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
-int do_version(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
-int do_signature(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
-int do_serialnumber(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
-int do_issuer(void* context, long  state_index, unsigned char tag, const void* value, size_t vlen);
-int do_subject(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
 int do_attribute_type(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
 int do_attribute_value(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
+int do_extension_id(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
 int do_extensions(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
-int do_validity_not_before(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
-int do_validity_not_after(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
+int do_issuer(void* context, long  state_index, unsigned char tag, const void* value, size_t vlen);
+int do_serialnumber(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
+int do_signature(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
+int do_subject(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
 int do_subject_public_key_info(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
+int do_validity_not_after(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
+int do_validity_not_before(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
+int do_version(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
+/*end sourced from x509.h*/
 int PrintCertificates(unsigned char* data, unsigned int len, FILE** fp);
 EFI_STATUS get_variable(char *filepath, unsigned char* Data, unsigned int* Len, FILE** fp);
 EFI_STATUS OutputVariable(char *filepath);
@@ -380,7 +382,7 @@ do_serialnumber( void *context,
 
     bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"  Serial Number: ");
     if (vlen > 4) {
-        for (int i = 0; i < vlen; i++, p++) {
+        for (size_t i = 0; i < vlen; i++, p++) {
             bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"%02x%c", (unsigned char)*p, ((i + 1 == vlen) ? ' ' : ':'));
         }
     }
@@ -509,7 +511,7 @@ PrintCertificates( unsigned char *data,
 	
     EFI_SIGNATURE_LIST *CertList = (EFI_SIGNATURE_LIST *)data;
     EFI_SIGNATURE_DATA *Cert;
-    wchar_t* certType = calloc(certbuff, sizeof(wchar_t));
+    wchar_t *certType = calloc(certbuff, sizeof(wchar_t));
     BOOLEAN  CertFound = FALSE;
     unsigned int    DataSize = len;
     unsigned int    CertCount = 0;
@@ -533,7 +535,7 @@ PrintCertificates( unsigned char *data,
             if ( CertList->SignatureSize > 100 ) {
                 CertFound = TRUE;
                 //outbuf[0] = '\0';
-                bufutil += swprintf_s(outbuf + bufutil, (bufsize - bufutil) , L"\nType: %ls  (GUID: %g)\n", certType, &Cert->SignatureOwner);
+                bufutil += swprintf_s(outbuf + bufutil, (bufsize - bufutil) , L"\nType: %ls  (GUID: %hs)\n", certType, &Cert->SignatureOwner.Data4); //TODO: warning C4477 : 'swprintf_s' : format string '%g' requires an argument of type 'double', but variadic argument 2 has type 'EFI_GUID *'
                 //printf("%s", outbuf);
                 //outbuf[0] = '\0';
                 buflen  = CertList->SignatureSize - sizeof(EFI_GUID);

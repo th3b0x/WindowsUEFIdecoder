@@ -345,7 +345,7 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 				{
 					goto data_overrun_error;
 				}
-				hdr += n;
+				hdr += n; //TODO: WARNING C4267 : '+=' : conversion from 'size_t' to 'unsigned char', possible loss of data
 				for (len = 0; n > 0; n--) {
 					len <<= 8;
 					len |= data[dp++];
@@ -368,11 +368,11 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 			{
 				goto cons_stack_overflow;
 			}
-			cons_dp_stack[csp] = dp;
+			cons_dp_stack[csp] = dp; //TODO: WARNING C4267 : '+=' : conversion from 'size_t' to 'unsigned short', possible loss of data
 			cons_hdrlen_stack[csp] = hdr;
 			if (!(flags & FLAG_INDEFINITE_LENGTH)) 
 			{
-				cons_datalen_stack[csp] = datalen;
+				cons_datalen_stack[csp] = datalen; //TODO: WARNING C4267 : '+=' : conversion from 'size_t' to 'unsigned short', possible loss of data
 				datalen = dp + len;
 			} 
 			else 
@@ -439,7 +439,7 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 			{
 				goto jump_stack_overflow;
 			}
-			jump_stack[jsp++] = pc + asn1_op_lengths[op];
+			jump_stack[jsp++] = pc + asn1_op_lengths[op]; //TODO: WARNING C4267 : '+=' : conversion from 'size_t' to 'unsigned char', possible loss of data
 			pc = machine[pc + 2];
 			goto next_op;
 
@@ -479,7 +479,7 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 				goto cons_stack_underflow;
 			}
 			csp--;
-			tdp = cons_dp_stack[csp];		//NOTE TODO: seeing static analysis warnings here for data
+			tdp = cons_dp_stack[csp];
 			hdr = cons_hdrlen_stack[csp];
 			len = datalen;
 			datalen = cons_datalen_stack[csp];
@@ -600,7 +600,7 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 	long_tag_not_supported:
 		Errmsg = L"Long tag not supported";
 	error:
-		memset(tmpbuf, 0, BUFF_SIZE);
+		//memset(tmpbuf, 0, BUFF_SIZE); //TODO : this wasn't in the original fpmurphy code, so not sure why I added data sanitation here
 		swprintf_s(tmpbuf,BUFF_SIZE,L"ERROR: %ls\n", Errmsg);
 		printf_s("%ls", tmpbuf);
 	return -EBADMSG;

@@ -18,7 +18,7 @@
 typedef int (*asn1_action_t)(void *context,
 			     long hdrlen, /* In case of ANY type */
 			     unsigned char tag, /* In case of ANY type */
-			     const void *value, long vlen);
+			     const void *value, size_t vlen);
 
 struct asn1_decoder {
 	const unsigned char *machine;

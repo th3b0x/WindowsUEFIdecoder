@@ -34,13 +34,17 @@ Lookup_OID(const void *data, size_t datasize)
     const unsigned char *octets = data;
     enum OID oid;
     unsigned char xhash;
-    unsigned i, j, k, hash; //TO DO: WTF? "unsigned"?  "unsigned" what?  Compiler is *assuming* int
+    //unsigned i, j, k, hash; //TO DO: WTF? "unsigned"?  "unsigned" what?  Compiler is *assuming* int
+    size_t i, j, k, hash; //TO DO: WTF? "unsigned"?  "unsigned" what?  Compiler is *assuming* int
     long len;
 
     /* Hash the OID data */
     hash = datasize - 1;
     for (i = 0; i < datasize; i++)
-        hash += octets[i] * 33;
+    {
+        size_t octet = octets[i];
+        hash += octet * 33;
+    }
     hash = (hash >> 24) ^ (hash >> 16) ^ (hash >> 8) ^ hash;
     hash &= 0xff;
 

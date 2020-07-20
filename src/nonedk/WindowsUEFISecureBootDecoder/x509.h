@@ -5,20 +5,20 @@
  */
 
 #include "asn1_ber_bytecode.h"
-
+#include "stdlib.h"
 extern const struct asn1_decoder x509_decoder;
 
-extern int do_algorithm(void *, long, unsigned char, const void *, long);
-extern int do_attribute_type(void *, long, unsigned char, const void *, long);
-extern int do_attribute_value(void *, long, unsigned char, const void *, long);
-extern int do_extension_id(void *, long, unsigned char, const void *, long);
-extern int do_extensions(void *, long, unsigned char, const void *, long);
-extern int do_issuer(void *, long, unsigned char, const void *, long);
-extern int do_serialnumber(void *, long, unsigned char, const void *, long);
-extern int do_signature(void *, long, unsigned char, const void *, long);
-extern int do_subject(void *, long, unsigned char, const void *, long);
-extern int do_subject_public_key_info(void *, long, unsigned char, const void *, long);
-extern int do_validity_not_after(void *, long, unsigned char, const void *, long);
-extern int do_validity_not_before(void *, long, unsigned char, const void *, long);
-extern int do_version(void *, long, unsigned char, const void *, long);
+extern int do_algorithm(void *, long, unsigned char, const void *, size_t);
+extern int do_attribute_type(void *, long, unsigned char, const void *, size_t);
+extern int do_attribute_value(void *, long, unsigned char, const void *, size_t);
+extern int do_extension_id(void *, long, unsigned char, const void *, size_t);
+extern int do_extensions(void *, long, unsigned char, const void *, size_t);
+extern int do_issuer(void *, long, unsigned char, const void *, size_t);
+extern int do_serialnumber(void *, long, unsigned char, const void *, size_t);
+extern int do_signature(void *, long, unsigned char, const void *, size_t);
+extern int do_subject(void *, long, unsigned char, const void *, size_t);
+extern int do_subject_public_key_info(void *, long, unsigned char, const void *, size_t);
+extern int do_validity_not_after(void *, long, unsigned char, const void *, size_t);
+extern int do_validity_not_before(void *, long, unsigned char, const void *, size_t);
+extern int do_version(void *, long, unsigned char, const void *, size_t);
 
