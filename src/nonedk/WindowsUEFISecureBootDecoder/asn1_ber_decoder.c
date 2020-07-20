@@ -27,6 +27,7 @@
 #define BUFF_SIZE 1000
 wchar_t tmpbuf[BUFF_SIZE];
 
+/* asn1_op_lenghts defined in asn1_ber_bytecode.h*/
 static const unsigned char asn1_op_lengths[ASN1_OP__NR] = {
 /*           OPC                         TAG JMP ACT */
 	[ASN1_OP_MATCH]                     = 1 + 1,
@@ -280,14 +281,12 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 			goto long_tag_not_supported;
 		}
 
-		/*
+		
 		if (op & ASN1_OP_MATCH__ANY) 
 		{
 			;	//I dislike hanging semicolons, should examine this block's purpose
 		} 
 		else
-		//*/
-		if(!(op & ASN1_OP_MATCH__ANY))
 		{
 			/* Extract the tag from the machine
 			 * - Either CONS or PRIM are permitted in the data if

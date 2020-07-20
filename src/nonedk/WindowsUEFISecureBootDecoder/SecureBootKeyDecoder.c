@@ -201,7 +201,7 @@ do_algorithm(void* context,
     memset(buffer, 0, DO_ALGORITHM_BUFF);
 
     oid = Lookup_OID(value, vlen);
-    Sprint_OID(value, vlen, buffer, sizeof(buffer));
+    Sprint_OID(value, vlen, buffer, sizeof(buffer)); //TODO: 0xC0000005: Access violation reading location 0xFFFFFFFFFFFFFFFF. Always happens here when breaking on 204
     if (oid == OID_id_dsa_with_sha1)
         bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"%ls", L"id_dsa_with_sha1");
     else if (oid == OID_id_dsa)
