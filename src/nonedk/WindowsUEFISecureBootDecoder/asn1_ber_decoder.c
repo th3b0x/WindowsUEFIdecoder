@@ -79,8 +79,8 @@ static int asn1_find_indefinite_length(const unsigned char *data, size_t datalen
 	if ((datalen - dp) < 2)
 	{
 		if (datalen == dp)
-			goto missing_eoc;
-		goto data_overrun_error;
+			goto ERR_missing_eoc;
+		goto ERR_data_overrun_error;
 	}
 
 	/* Extract a tag from the data */
@@ -90,7 +90,7 @@ static int asn1_find_indefinite_length(const unsigned char *data, size_t datalen
 		/* It appears to be an EOC. */
 		if (data[dp++] != 0)
 		{
-			goto invalid_eoc;
+			goto ERR_invalid_eoc;
 		}
 		if (--indef_level <= 0) 
 		{
@@ -108,7 +108,7 @@ static int asn1_find_indefinite_length(const unsigned char *data, size_t datalen
 			//if (unlikely(datalen - dp < 2))
 			if ((datalen - dp) < 2)
 			{
-				goto data_overrun_error;
+				goto ERR_data_overrun_error;
 			}
 			tmp = data[dp++];
 		} while (tmp & 0x80);
@@ -128,7 +128,7 @@ static int asn1_find_indefinite_length(const unsigned char *data, size_t datalen
 		//if (unlikely((tag & ASN1_CONS_BIT) == ASN1_PRIM << 5))
 		if ((tag & ASN1_CONS_BIT) == (ASN1_PRIM << 5))
 		{
-			goto indefinite_len_primitive;
+			goto ERR_indefinite_len_primitive;
 		}
 		indef_level++;
 		goto next_tag;
@@ -138,12 +138,12 @@ static int asn1_find_indefinite_length(const unsigned char *data, size_t datalen
 	//if (unlikely(n > sizeof(size_t) - 1))
 	if (n > (sizeof(size_t) - 1) )
 	{
-		goto length_too_long;
+		goto ERR_length_too_long;
 	}
 	//if (unlikely(n > datalen - dp))
 	if (n > (datalen - dp))
 	{
-		goto data_overrun_error;
+		goto ERR_data_overrun_error;
 	}
 	for (len = 0; n > 0; n--) {
 		len <<= 8;
@@ -157,19 +157,19 @@ static int asn1_find_indefinite_length(const unsigned char *data, size_t datalen
 	 *		if you get garbled output, these may be the culprits
 	 * 
 	 */
-	length_too_long:
+	ERR_length_too_long:
 		*_errmsg = "Unsupported length";
 		goto error;
-	indefinite_len_primitive:
+	ERR_indefinite_len_primitive:
 		*_errmsg = "Indefinite len primitive not permitted";
 		goto error;
-	invalid_eoc:
+	ERR_invalid_eoc:
 		*_errmsg = "Invalid length EOC";
 		goto error;
-	data_overrun_error:
+	ERR_data_overrun_error:
 		*_errmsg = "Data overrun error";
 		goto error;
-	missing_eoc:
+	ERR_missing_eoc:
 		*_errmsg = "Missing EOC in indefinite len cons";
 	error:
 		*_dp = dp;
@@ -240,14 +240,14 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 	//if (unlikely(pc >= machlen))
 	if (pc >= machlen)
 	{
-		goto machine_overrun_error;
+		goto ERR_machine_overrun_error;
 	}
-	op = machine[pc];
+	op = machine[pc];	//Cross-reference against x509.c static const unsigned char x509_machine[]
 
 	//if (unlikely(pc + asn1_op_lengths[op] > machlen))
 	if ((pc + asn1_op_lengths[op]) > machlen)
 	{
-		goto machine_overrun_error;
+		goto ERR_machine_overrun_error;
 	}
 
 	/* If this command is meant to match a tag, then do that before
@@ -272,13 +272,13 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 		//if (unlikely(dp >= datalen - 1))
 		if (dp >= (datalen - 1))
 		{
-			goto data_overrun_error;
+			goto ERR_data_overrun_error;
 		}
 		tag = data[dp++];
 		//if (unlikely((tag & 0x1f) == 0x1f))
 		if ((tag & 0x1f) == 0x1f)
 		{
-			goto long_tag_not_supported;
+			goto ERR_long_tag_not_supported;
 		}
 
 		
@@ -308,7 +308,7 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 					dp--;
 					goto next_op;
 				}
-				goto tag_mismatch;
+				goto ERR_tag_mismatch;
 			}
 		}
 		flags |= FLAG_MATCHED;
@@ -323,13 +323,13 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 				//if (unlikely(!(tag & ASN1_CONS_BIT)))
 				if (!(tag & ASN1_CONS_BIT))
 				{
-					goto indefinite_len_primitive;
+					goto ERR_indefinite_len_primitive;
 				}
 				flags |= FLAG_INDEFINITE_LENGTH;
 				//if (unlikely(2 > datalen - dp))
 				if (2 > (datalen - dp))
 				{
-					goto data_overrun_error;
+					goto ERR_data_overrun_error;
 				}
 			} 
 			else {
@@ -337,12 +337,12 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 				//if (unlikely(n > 2))
 				if (n > 2)
 				{
-					goto length_too_long;
+					goto ERR_length_too_long;
 				}
 				//if (unlikely(dp >= datalen - n))
 				if (dp >= (datalen - n))
 				{
-					goto data_overrun_error;
+					goto ERR_data_overrun_error;
 				}
 				hdr += n; //TODO: WARNING C4267 : '+=' : conversion from 'size_t' to 'unsigned char', possible loss of data
 				for (len = 0; n > 0; n--) {
@@ -352,7 +352,7 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 				//if (unlikely(len > datalen - dp))
 				if (len > (datalen - dp))
 				{
-					goto data_overrun_error;
+					goto ERR_data_overrun_error;
 				}
 			}
 		}
@@ -365,7 +365,7 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 			//if (unlikely(csp >= NR_CONS_STACK))
 			if (csp >= NR_CONS_STACK)
 			{
-				goto cons_stack_overflow;
+				goto ERR_cons_stack_overflow;
 			}
 			cons_dp_stack[csp] = dp; //TODO: WARNING C4267 : '+=' : conversion from 'size_t' to 'unsigned short', possible loss of data
 			cons_hdrlen_stack[csp] = hdr;
@@ -436,7 +436,7 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 			//if (unlikely(jsp == NR_JUMP_STACK))
 			if (jsp == NR_JUMP_STACK)
 			{
-				goto jump_stack_overflow;
+				goto ERR_jump_stack_overflow;
 			}
 			jump_stack[jsp++] = pc + asn1_op_lengths[op]; //TODO: WARNING C4267 : '+=' : conversion from 'size_t' to 'unsigned char', possible loss of data
 			pc = machine[pc + 2];
@@ -446,7 +446,7 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 			//if (unlikely(!(flags & FLAG_MATCHED)))
 			if (!(flags & FLAG_MATCHED))
 			{
-				goto tag_mismatch;
+				goto ERR_tag_mismatch;
 			}
 			pc += asn1_op_lengths[op];
 			goto next_op;
@@ -455,7 +455,8 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 			//if (unlikely(jsp != 0 || csp != 0)) 
 			if (jsp != 0 || csp != 0)
 			{
-				return -EBADMSG;
+				goto ERR_unspecified;
+				//return -EBADMSG;
 			}
 			return 0;
 
@@ -464,7 +465,7 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 			//if (unlikely(!(flags & FLAG_MATCHED)))
 			if (!(flags & FLAG_MATCHED))
 			{
-				goto tag_mismatch;
+				goto ERR_tag_mismatch;
 			}
 		case ASN1_OP_END_SEQ:
 		case ASN1_OP_END_SET_OF:
@@ -475,7 +476,7 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 			//if (unlikely(csp <= 0))
 			if (csp <= 0)
 			{
-				goto cons_stack_underflow;
+				goto ERR_cons_stack_underflow;
 			}
 			csp--;
 			tdp = cons_dp_stack[csp];
@@ -489,7 +490,7 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 				//if (unlikely(datalen - dp < 2))
 				if ((datalen - dp) < 2)
 				{
-					goto data_overrun_error;
+					goto ERR_data_overrun_error;
 				}
 				if (data[dp++] != 0) 
 				{
@@ -500,11 +501,11 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 						pc = machine[pc + 1];
 						goto next_op;
 					}
-					goto missing_eoc;
+					goto ERR_missing_eoc;
 				}
 				if (data[dp++] != 0)
 				{
-					goto invalid_eoc;
+					goto ERR_invalid_eoc;
 				}
 				len = dp - tdp - 2;
 			} 
@@ -519,7 +520,7 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 				}
 				if (dp != len)
 				{
-					goto cons_length_error;
+					goto ERR_cons_length_error;
 				}
 				len -= tdp;
 			}
@@ -549,7 +550,7 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 			//if (unlikely(jsp <= 0))
 			if (jsp <= 0)
 			{
-				goto jump_stack_underflow;
+				goto ERR_jump_stack_underflow;
 			}
 			pc = jump_stack[--jsp];
 			goto next_op;
@@ -559,44 +560,46 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 
 	/* Shouldn't reach here */
 	return -EBADMSG;
-
-	data_overrun_error:
+	ERR_unspecified:
+		Errmsg = L"Unspecified asn1_ber_decoder error";
+		goto error;
+	ERR_data_overrun_error:
 		Errmsg = L"Data overrun error";
 		goto error;
-	machine_overrun_error:
+	ERR_machine_overrun_error:
 		Errmsg = L"Machine overrun error";
 		goto error;
-	jump_stack_underflow:
+	ERR_jump_stack_underflow:
 		Errmsg = L"Jump stack underflow";
 		goto error;
-	jump_stack_overflow:
+	ERR_jump_stack_overflow:
 		Errmsg = L"Jump stack overflow";
 		goto error;
-	cons_stack_underflow:
+	ERR_cons_stack_underflow:
 		Errmsg = L"Cons stack underflow";
 		goto error;
-	cons_stack_overflow:
+	ERR_cons_stack_overflow:
 		Errmsg = L"Cons stack overflow";
 		goto error;
-	cons_length_error:
+	ERR_cons_length_error:
 		Errmsg = L"Cons length error";
 		goto error;
-	missing_eoc:
+	ERR_missing_eoc:
 		Errmsg = L"Missing EOC in indefinite len cons";
 		goto error;
-	invalid_eoc:
+	ERR_invalid_eoc:
 		Errmsg = L"Invalid length EOC";
 		goto error;
-	length_too_long:
+	ERR_length_too_long:
 		Errmsg = L"Unsupported length";
 		goto error;
-	indefinite_len_primitive:
+	ERR_indefinite_len_primitive:
 		Errmsg = L"Indefinite len primitive not permitted";
 		goto error;
-	tag_mismatch:
+	ERR_tag_mismatch:
 		Errmsg = L"Unexpected tag";
 		goto error;
-	long_tag_not_supported:
+	ERR_long_tag_not_supported:
 		Errmsg = L"Long tag not supported";
 	error:
 		//memset(tmpbuf, 0, BUFF_SIZE); //TODO : this wasn't in the original fpmurphy code, so not sure why I added data sanitation here
