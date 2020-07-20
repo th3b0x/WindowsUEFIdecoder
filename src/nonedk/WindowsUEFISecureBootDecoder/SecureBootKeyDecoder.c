@@ -201,7 +201,8 @@ do_algorithm(void* context,
     memset(buffer, 0, DO_ALGORITHM_BUFF);
 
     oid = Lookup_OID(value, vlen);
-    Sprint_OID(value, vlen, buffer, sizeof(buffer)); //TODO: 0xC0000005: Access violation reading location 0xFFFFFFFFFFFFFFFF. Always happens here when breaking on 204
+    //Sprint_OID(value, vlen, buffer, sizeof(buffer)); //TODO: 0xC0000005: Access violation reading location 0xFFFFFFFFFFFFFFFF. Always happens here when breaking on 204
+    Sprint_OID(value, vlen, buffer, DO_ALGORITHM_BUFF); //TODO: 0xC0000005: Access violation reading location 0xFFFFFFFFFFFFFFFF. Always happens here when breaking on 204
     if (oid == OID_id_dsa_with_sha1)
         bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"%ls", L"id_dsa_with_sha1");
     else if (oid == OID_id_dsa)
@@ -260,7 +261,7 @@ do_extension_id(void* context,
     }
 
     oid = Lookup_OID(value, vlen);
-    Sprint_OID(value, vlen, buffer, sizeof(buffer));
+    Sprint_OID(value, vlen, buffer, DO_EXTENSION_ID_BUFF);
 
     if (oid == OID_subjectKeyIdentifier)
         bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"%ls", L" SubjectKeyIdentifier");
@@ -314,7 +315,7 @@ do_attribute_type(void* context,
     buffer = calloc(doatttypebuff, sizeofchar);*/
 
     oid = Lookup_OID(value, vlen);
-    Sprint_OID(value, vlen, buffer, sizeof(buffer));
+    Sprint_OID(value, vlen, buffer, DO_ATTRIBUTE_TYPE_BUFF);
 
     if (oid == OID_countryName) {
         bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"%ls", L" C=");
@@ -502,6 +503,18 @@ do_subject_public_key_info( void *context,
     return 0;
 }
 
+void fix_print_output()
+{
+    for (unsigned int i = 0; i < bufutil; i++)
+    {
+        if (outbuf[i] == 0)
+        {
+            outbuf[i] = L" ";
+        }
+    }
+    outbuf[bufutil] = 0;
+}
+
 int
 PrintCertificates( unsigned char *data, 
                    unsigned int len, 
@@ -520,7 +533,7 @@ PrintCertificates( unsigned char *data,
 	
     /*Certificate output buffer setup*/
     memset(outbuf, 0, bufsize);
-    bufutil = 1;
+    bufutil = 0;
 
     while ((DataSize > 0) && (DataSize >= CertList->SignatureListSize)) {
         CertCount = (CertList->SignatureListSize - CertList->SignatureHeaderSize) / CertList->SignatureSize;
@@ -540,9 +553,10 @@ PrintCertificates( unsigned char *data,
                 //outbuf[0] = '\0';
                 buflen  = CertList->SignatureSize - sizeof(EFI_GUID);
                 status = asn1_ber_decoder(&x509_decoder, NULL, Cert->SignatureData, buflen); //x509_decoder from x509.h, which loads functions above (clever)
-                printf("%ls", outbuf);
+                fix_print_output();
+                printf("%ls\n", outbuf);
                 memset(outbuf, 0, bufsize);
-                bufutil = 1;
+                bufutil = 0;
             }
             Cert = (EFI_SIGNATURE_DATA *) ((unsigned char *) Cert + CertList->SignatureSize);
         }
