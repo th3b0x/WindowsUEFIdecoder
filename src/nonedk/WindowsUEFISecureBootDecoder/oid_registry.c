@@ -110,22 +110,23 @@ Lookup_OID(const void *data, long datasize)
  * and -ENOBUFS if the buffer was too small.
  */
 int 
-Sprint_OID(const void *data, long datasize, CHAR16 *buffer, long bufsize)
+Sprint_OID(const void *data, long datasize, wchar_t *buffer, long bufsize)
 {
     const unsigned char *v = data, *end = v + datasize;
-    UINT64 num;
-    UINT8 n;
+    unsigned int num;
+    unsigned int seven = 7;
+    unsigned char n;
     long ret;
     int count;
     int bufutil = 0;
-    CHAR16* index = buffer;
+    wchar_t* index = buffer;
     long origsize = bufsize;
     if (v >= end)
     {
         return -EBADMSG;
     }
 
-    n = (UINT8)*v++;
+    n = (unsigned char)*v++;
     bufutil += swprintf_s(buffer, bufsize, L"%d.%d", n / 40, n % 40);
     //ret = count = strlen(buffer);
     ret = count = bufutil;
@@ -138,7 +139,7 @@ Sprint_OID(const void *data, long datasize, CHAR16 *buffer, long bufsize)
 
     while (v < end) {
         num = 0;
-        n = (UINT8)*v++;
+        n = (unsigned char)*v++;
         if (!(n & 0x80)) {
             num = n;
         } else {
@@ -148,8 +149,8 @@ Sprint_OID(const void *data, long datasize, CHAR16 *buffer, long bufsize)
                 {
                     return -EBADMSG;
                 }
-                n = (UINT8)*v++; //TODO: this bit shift is almost certainly causing the stack corruption error
-                num <<= (UINT64)7; 
+                n = (unsigned char)*v++; //TODO: this bit shift is almost certainly causing the stack corruption error
+                num <<= seven; 
                 num |= n & 0x7f;
             } while (n & 0x80);
         }

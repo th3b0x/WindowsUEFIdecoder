@@ -26,23 +26,23 @@ typedef struct {
   /// The length of the entire certificate,
   /// including the length of the header, in bytes.
   ///
-  UINT32  dwLength;
+  unsigned int  dwLength;
   ///
   /// The revision level of the WIN_CERTIFICATE
   /// structure. The current revision level is 0x0200.
   ///
-  UINT16  wRevision;
+  wchar_t  wRevision;
   ///
   /// The certificate type. See WIN_CERT_TYPE_xxx for the UEFI
   /// certificate types. The UEFI specification reserves the range of
   /// certificate type values from 0x0EF0 to 0x0EFF.
   ///
-  UINT16  wCertificateType;
+  wchar_t  wCertificateType;
   ///
   /// The following is the actual certificate. The format of
   /// the certificate depends on wCertificateType.
   ///
-  /// UINT8 bCertificate[ANYSIZE_ARRAY];
+  /// unsigned char bCertificate[ANYSIZE_ARRAY];
   ///
 } WIN_CERTIFICATE;
 
@@ -57,8 +57,8 @@ typedef struct {
 ///
 typedef struct {
   EFI_GUID  HashType;
-  UINT8     PublicKey[256];
-  UINT8     Signature[256];
+  unsigned char     PublicKey[256];
+  unsigned char     Signature[256];
 } EFI_CERT_BLOCK_RSA_2048_SHA256;
 
 
@@ -82,7 +82,7 @@ typedef struct {
   /// If CertType is EFI_CERT_TYPE_RSA2048_SHA256_GUID,
   /// the CertData will be EFI_CERT_BLOCK_RSA_2048_SHA256 structure.
   ///
-  UINT8            CertData[1];
+  unsigned char            CertData[1];
 } WIN_CERTIFICATE_UEFI_GUID;
 
 
@@ -113,7 +113,7 @@ typedef struct {
   /// from the total length of the certificate as found in
   /// Hdr.dwLength.
   ///
-  /// UINT8 Signature[];
+  /// unsigned char Signature[];
   ///
 } WIN_CERTIFICATE_EFI_PKCS1_15;
 

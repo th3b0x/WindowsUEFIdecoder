@@ -37,3 +37,6 @@ Debug/
 *.vcxproj
 *.vcxproj*
 *.sln
+
+WindowsUEFIdecoder/x64/*
+*/WindowsUEFIdecoder/x64/*

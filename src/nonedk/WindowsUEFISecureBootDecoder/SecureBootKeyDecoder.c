@@ -22,6 +22,7 @@
 #define UTILITY_VERSION "20190403"
 #undef DEBUG
 #define DEBUG
+#define TMP_BUFF_SIZE 1000
 #define BUFF_SIZE 3000
 #define CERT_BUFF 100
 #define DO_ALGORITHM_BUFF 200
@@ -29,15 +30,16 @@
 #define DO_ATTRIBUTE_TYPE_BUFF 120
 
 // temporary store for output text
-char tmpbuf[1000];
-char outbuf[BUFF_SIZE];
+wchar_t tmpbuf[TMP_BUFF_SIZE];
+wchar_t outbuf[BUFF_SIZE];
 unsigned int bufsize = BUFF_SIZE;
 unsigned int bufutil;
-long doalgobuff = DO_ALGORITHM_BUFF;
-long doextbuff = DO_EXTENSION_ID_BUFF;
-long doatttypebuff = DO_ATTRIBUTE_TYPE_BUFF;
-long certbuff = CERT_BUFF;
-int    wrapno = 1;
+unsigned int tmpbuffsize = TMP_BUFF_SIZE;
+unsigned int doalgobuff = DO_ALGORITHM_BUFF;
+unsigned int doextbuff = DO_EXTENSION_ID_BUFF;
+unsigned int doatttypebuff = DO_ATTRIBUTE_TYPE_BUFF;
+unsigned int certbuff = CERT_BUFF;
+unsigned int    wrapno = 1;
 unsigned int sizeofchar = sizeof(char);
 
 
@@ -45,11 +47,10 @@ unsigned int sizeofchar = sizeof(char);
 /**
  * Function prototypes to make it easier to inventory, track, and document program structure
  */
-rsize_t strlen_s(char* str);
 int CompareGuid(GUID* first, GUID* second);
-char* AsciiToUnicode(const char* Str, int Len);
+wchar_t* AsciiToUnicode(const char* Str, long Len);
 char* make_utc_date_string(char* s);
-void GetCertType(GUID* certGUID, char** typeName);
+void GetCertType(GUID* certGUID, wchar_t** typeName);
 int do_algorithm(void* context, long state_index, unsigned char tag, const void* value, long vlen);
 int do_extension_id(void* context, long state_index, unsigned char tag, const void* value, long vlen);
 int do_version(void* context, long state_index, unsigned char tag, const void* value, long vlen);
@@ -63,16 +64,11 @@ int do_extensions(void* context, long state_index, unsigned char tag, const void
 int do_validity_not_before(void* context, long state_index, unsigned char tag, const void* value, long vlen);
 int do_validity_not_after(void* context, long state_index, unsigned char tag, const void* value, long vlen);
 int do_subject_public_key_info(void* context, long state_index, unsigned char tag, const void* value, long vlen);
-int PrintCertificates(UINT8* data, UINTN len, FILE** fp);
-EFI_STATUS get_variable(char *filepath, UINT8* Data, UINTN* Len, FILE** fp);
+int PrintCertificates(unsigned char* data, unsigned int len, FILE** fp);
+EFI_STATUS get_variable(char *filepath, unsigned char* Data, unsigned int* Len, FILE** fp);
 EFI_STATUS OutputVariable(char *filepath);
 VOID Usage(BOOLEAN ErrorMsg);
 int main(int Argc, char** Argv);
-
-rsize_t strlen_s(char* str)
-{
-    return (rsize_t)(strlen(str) * 2);
-}
 
 int CompareGuid(GUID *first, GUID *second)
 {
@@ -89,12 +85,12 @@ int CompareGuid(GUID *first, GUID *second)
     return mismatchIndex;
 }
 
-char*
+wchar_t*
 AsciiToUnicode(const char* Str,
-    int Len)
+    long Len)
 {
-    char* Ret = NULL;
-    Ret = calloc((Len * 2 + 2), sizeofchar);
+    wchar_t *Ret = NULL;
+    Ret = calloc(Len, sizeof(wchar_t));
 
     if (!Ret)
         return NULL;
@@ -143,7 +139,7 @@ make_utc_date_string(char* s)
     return buffer;
 }
 
-void GetCertType(GUID* certGUID, char** typeName)
+void GetCertType(GUID* certGUID, wchar_t** typeName)
 {
     EFI_GUID gX509 = EFI_CERT_X509_GUID;
     EFI_GUID gPKCS7 = EFI_CERT_TYPE_PKCS7_GUID;
@@ -199,7 +195,7 @@ do_algorithm(void* context,
     enum OID oid;
     /*char* buffer = NULL;
     buffer = calloc(doalgobuff, sizeofchar);*/
-    CHAR16 buffer[DO_ALGORITHM_BUFF];
+    wchar_t buffer[DO_ALGORITHM_BUFF];
     memset(buffer, 0, DO_ALGORITHM_BUFF);
 
     oid = Lookup_OID(value, vlen);
@@ -251,9 +247,9 @@ do_extension_id(void* context,
     enum OID oid;
     /*char* buffer = NULL;
     buffer = calloc(doextbuff, sizeofchar);*/
-    CHAR16 buffer[DO_EXTENSION_ID_BUFF];
+    wchar_t buffer[DO_EXTENSION_ID_BUFF];
     memset(buffer, 0, DO_EXTENSION_ID_BUFF);
-    int len = strlen_s(tmpbuf);
+    size_t len = wcsnlen(tmpbuf, tmpbuffsize);
 
     if (len > (90 * wrapno)) {
         // Not sure why a CR is now required in UDK2017.  Need to investigate
@@ -310,7 +306,7 @@ do_attribute_type(void* context,
     long vlen)
 {
     enum OID oid;
-    CHAR16 buffer[DO_ATTRIBUTE_TYPE_BUFF];
+    wchar_t buffer[DO_ATTRIBUTE_TYPE_BUFF];
     memset(buffer, 0, DO_ATTRIBUTE_TYPE_BUFF);
     /*char* buffer = NULL;
     buffer = calloc(doatttypebuff, sizeofchar);*/
@@ -385,7 +381,7 @@ do_serialnumber( void *context,
     bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"  Serial Number: ");
     if (vlen > 4) {
         for (int i = 0; i < vlen; i++, p++) {
-            bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"%02x%c", (UINT8)*p, ((i + 1 == vlen) ? ' ' : ':'));
+            bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"%02x%c", (unsigned char)*p, ((i + 1 == vlen) ? ' ' : ':'));
         }
     }
     bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"%ls", L"\n");
@@ -429,9 +425,9 @@ do_attribute_value( void *context,
                     const void *value,
                     long vlen )
 {
-    char *ptr;
+    wchar_t *ptr;
 
-    ptr = AsciiToUnicode(value, (int)vlen);
+    ptr = AsciiToUnicode(value, vlen);
     bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"%ls",ptr);
     free(ptr);
 
@@ -460,7 +456,7 @@ do_validity_not_before( void *context,
                         const void *value, 
                         long vlen )
 {
-    char *ptr;
+    wchar_t *ptr;
     char *p;
 
     p = make_utc_date_string((char *)value);
@@ -479,7 +475,7 @@ do_validity_not_after( void *context,
                        const void *value,
                        long vlen )
 {
-    char *ptr;
+    wchar_t *ptr;
     char *p;
 
     p = make_utc_date_string((char *)value);
@@ -505,19 +501,19 @@ do_subject_public_key_info( void *context,
 }
 
 int
-PrintCertificates( UINT8 *data, 
-                   UINTN len, 
+PrintCertificates( unsigned char *data, 
+                   unsigned int len, 
                    FILE **fp )
 {
     fread_s(data,8000, sizeofchar, len, *fp);
 	
     EFI_SIGNATURE_LIST *CertList = (EFI_SIGNATURE_LIST *)data;
     EFI_SIGNATURE_DATA *Cert;
-    char* certType = calloc(certbuff, sizeofchar);
+    wchar_t* certType = calloc(certbuff, sizeof(wchar_t));
     BOOLEAN  CertFound = FALSE;
-    UINTN    DataSize = len;
-    UINTN    CertCount = 0;
-    UINTN    buflen;
+    unsigned int    DataSize = len;
+    unsigned int    CertCount = 0;
+    unsigned int    buflen;
     int      status = 0;
 	
     /*Certificate output buffer setup*/
@@ -526,14 +522,14 @@ PrintCertificates( UINT8 *data,
 
     while ((DataSize > 0) && (DataSize >= CertList->SignatureListSize)) {
         CertCount = (CertList->SignatureListSize - CertList->SignatureHeaderSize) / CertList->SignatureSize;
-        Cert = (EFI_SIGNATURE_DATA *) ((UINT8 *) CertList + sizeof (EFI_SIGNATURE_LIST) + CertList->SignatureHeaderSize);
+        Cert = (EFI_SIGNATURE_DATA *) ((unsigned char *) CertList + sizeof (EFI_SIGNATURE_LIST) + CertList->SignatureHeaderSize);
 
         memset(certType, 0, certbuff);
 
         // should all be X509 but just in case...
         GetCertType(&(CertList->SignatureType), &certType);
         
-        for (UINTN Index = 0; Index < CertCount; Index++) {
+        for (unsigned int Index = 0; Index < CertCount; Index++) {
             if ( CertList->SignatureSize > 100 ) {
                 CertFound = TRUE;
                 //outbuf[0] = '\0';
@@ -546,10 +542,10 @@ PrintCertificates( UINT8 *data,
                 memset(outbuf, 0, bufsize);
                 bufutil = 1;
             }
-            Cert = (EFI_SIGNATURE_DATA *) ((UINT8 *) Cert + CertList->SignatureSize);
+            Cert = (EFI_SIGNATURE_DATA *) ((unsigned char *) Cert + CertList->SignatureSize);
         }
         DataSize -= CertList->SignatureListSize;
-        CertList = (EFI_SIGNATURE_LIST *) ((UINT8 *) CertList + CertList->SignatureListSize);
+        CertList = (EFI_SIGNATURE_LIST *) ((unsigned char *) CertList + CertList->SignatureListSize);
     }
 
     if ( CertFound == FALSE ) {
@@ -562,8 +558,8 @@ PrintCertificates( UINT8 *data,
 
 EFI_STATUS
 get_variable( char *filepath, 
-              UINT8 *Data, 
-              UINTN *Len,
+              unsigned char *Data, 
+              unsigned int *Len,
               FILE **fp )
 {
     EFI_STATUS Status = EFI_SUCCESS;
@@ -609,8 +605,8 @@ EFI_STATUS OutputVariable( char *filepath)
     const char* _failedToOpenFileErr = "ERROR: Failed to get open %s. Status Code: %d\n";
 
     EFI_STATUS Status = EFI_SUCCESS;
-    UINT8 *Data = calloc(8000,sizeofchar); //TODO: hardcoding because I just want to process the DBX update for now
-    UINTN Len = 8000;
+    unsigned char *Data = calloc(8000,sizeofchar); //TODO: hardcoding because I just want to process the DBX update for now
+    unsigned int Len = 8000;
     FILE *fp = calloc(1, sizeof(FILE));
 
     #ifdef DEBUG
@@ -627,14 +623,14 @@ EFI_STATUS OutputVariable( char *filepath)
         
     } else if (Status == EFI_NOT_FOUND) {
         memset(outbuf, 0, bufsize);
-        bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"ERROR: Failed to get open %ls. Status Code: %I64d\n", filepath, Status);
+        bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"ERROR: Failed to get open %hs. Status Code: %I64d\n", filepath, Status);
         printf("%ls", outbuf);
         return Status;
     }
     else
     {
         memset(outbuf, 0, bufsize);
-        bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"ERROR: Failed to get open %ls. Status Code: %I64d\n", filepath, Status);
+        bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"ERROR: Failed to get open %hs. Status Code: %I64d\n", filepath, Status);
         printf("%ls", outbuf);
     }
 	free( Data );

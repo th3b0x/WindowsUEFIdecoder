@@ -24,11 +24,11 @@
 /*
 typedef long  size_t __attribute__((aligned (8)));
 */
-
+/* commented out because we're not compiling into a flash system
 typedef __declspec(align(8)) long;
 typedef __declspec(align(8)) size_t;
-
 #define unlikely(x) (x)
+*/
 
 
 #include "asn1.h"

@@ -101,6 +101,6 @@ enum OID {
 };
 
 extern enum OID Lookup_OID(const void *data, long datasize);
-extern int Sprint_OID(const void *, long, CHAR16 *, long);
+extern int Sprint_OID(const void *, long, wchar_t *, long);
 
 #endif /* _OID_REGISTRY_H */
