@@ -29,12 +29,12 @@
  * @datasize: Size of the binary representation
  */
 enum OID 
-Lookup_OID(const void *data, long datasize)
+Lookup_OID(const void *data, size_t datasize)
 {
     const unsigned char *octets = data;
     enum OID oid;
     unsigned char xhash;
-    unsigned i, j, k, hash;
+    unsigned i, j, k, hash; //TO DO: WTF? "unsigned"?  "unsigned" what?  Compiler is *assuming* int
     long len;
 
     /* Hash the OID data */
@@ -110,7 +110,7 @@ Lookup_OID(const void *data, long datasize)
  * and -ENOBUFS if the buffer was too small.
  */
 int 
-Sprint_OID(const void *data, long datasize, wchar_t *buffer, long bufsize)
+Sprint_OID(const void *data, size_t datasize, wchar_t *buffer, long bufsize)
 {
     const unsigned char *v = data, *end = v + datasize;
     unsigned int num;

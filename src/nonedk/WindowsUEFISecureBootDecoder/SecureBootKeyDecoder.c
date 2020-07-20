@@ -48,22 +48,22 @@ unsigned int sizeofchar = sizeof(char);
  * Function prototypes to make it easier to inventory, track, and document program structure
  */
 int CompareGuid(GUID* first, GUID* second);
-wchar_t* AsciiToUnicode(const char* Str, long Len);
+wchar_t* AsciiToUnicode(const char* Str, size_t Len);
 char* make_utc_date_string(char* s);
 void GetCertType(GUID* certGUID, wchar_t** typeName);
-int do_algorithm(void* context, long state_index, unsigned char tag, const void* value, long vlen);
-int do_extension_id(void* context, long state_index, unsigned char tag, const void* value, long vlen);
-int do_version(void* context, long state_index, unsigned char tag, const void* value, long vlen);
-int do_signature(void* context, long state_index, unsigned char tag, const void* value, long vlen);
-int do_serialnumber(void* context, long state_index, unsigned char tag, const void* value, long vlen);
-int do_issuer(void* context, long  state_index, unsigned char tag, const void* value, long vlen);
-int do_subject(void* context, long state_index, unsigned char tag, const void* value, long vlen);
-int do_attribute_type(void* context, long state_index, unsigned char tag, const void* value, long vlen);
-int do_attribute_value(void* context, long state_index, unsigned char tag, const void* value, long vlen);
-int do_extensions(void* context, long state_index, unsigned char tag, const void* value, long vlen);
-int do_validity_not_before(void* context, long state_index, unsigned char tag, const void* value, long vlen);
-int do_validity_not_after(void* context, long state_index, unsigned char tag, const void* value, long vlen);
-int do_subject_public_key_info(void* context, long state_index, unsigned char tag, const void* value, long vlen);
+int do_algorithm(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
+int do_extension_id(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
+int do_version(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
+int do_signature(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
+int do_serialnumber(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
+int do_issuer(void* context, long  state_index, unsigned char tag, const void* value, size_t vlen);
+int do_subject(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
+int do_attribute_type(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
+int do_attribute_value(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
+int do_extensions(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
+int do_validity_not_before(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
+int do_validity_not_after(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
+int do_subject_public_key_info(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
 int PrintCertificates(unsigned char* data, unsigned int len, FILE** fp);
 EFI_STATUS get_variable(char *filepath, unsigned char* Data, unsigned int* Len, FILE** fp);
 EFI_STATUS OutputVariable(char *filepath);
@@ -87,7 +87,7 @@ int CompareGuid(GUID *first, GUID *second)
 
 wchar_t*
 AsciiToUnicode(const char* Str,
-    long Len)
+    size_t Len)
 {
     wchar_t *Ret = NULL;
     Ret = calloc(Len, sizeof(wchar_t));
@@ -190,7 +190,7 @@ do_algorithm(void* context,
     long state_index,
     unsigned char tag,
     const void* value,
-    long vlen)
+    size_t vlen)
 {
     enum OID oid;
     /*char* buffer = NULL;
@@ -242,7 +242,7 @@ do_extension_id(void* context,
     long state_index,
     unsigned char tag,
     const void* value,
-    long vlen)
+    size_t vlen)
 {
     enum OID oid;
     /*char* buffer = NULL;
@@ -303,7 +303,7 @@ do_attribute_type(void* context,
     long state_index,
     unsigned char tag,
     const void* value,
-    long vlen)
+    size_t vlen)
 {
     enum OID oid;
     wchar_t buffer[DO_ATTRIBUTE_TYPE_BUFF];
@@ -345,7 +345,7 @@ do_version( void *context,
             long state_index,
             unsigned char tag,
             const void *value, 
-            long vlen )
+            size_t vlen )
 {
     int Version = *(const char *)value;
 
@@ -360,7 +360,7 @@ do_signature( void *context,
               long state_index,
               unsigned char tag,
               const void *value,
-              long vlen )
+              size_t vlen )
 {
     bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"  Signature Algorithm: %ls\n", tmpbuf);
     tmpbuf[0] = '\0';
@@ -374,7 +374,7 @@ do_serialnumber( void *context,
                  long state_index,
                  unsigned char tag,
                  const void *value, 
-                 long vlen )
+                 size_t vlen )
 {
     char *p = (char *)value;
 
@@ -395,7 +395,7 @@ do_issuer( void *context,
            long  state_index,
            unsigned char tag,
            const void *value,
-           long vlen )
+           size_t vlen )
 {
     bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"  Issuer:%ls\n", tmpbuf);
     tmpbuf[0] = '\0';
@@ -409,7 +409,7 @@ do_subject( void *context,
             long state_index,
             unsigned char tag,
             const void *value,
-            long vlen )
+            size_t vlen )
 {
     bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"  Subject:%ls\n", tmpbuf);
     tmpbuf[0] = '\0';
@@ -423,7 +423,7 @@ do_attribute_value( void *context,
                     long state_index,
                     unsigned char tag,
                     const void *value,
-                    long vlen )
+                    size_t vlen )
 {
     wchar_t *ptr;
 
@@ -440,7 +440,7 @@ do_extensions( void *context,
                long state_index,
                unsigned char tag,
                const void *value,
-               long vlen )
+               size_t vlen )
 {
     bufutil += swprintf_s(outbuf + bufutil,bufsize - bufutil, L"  Extensions:%ls\n", tmpbuf);
     tmpbuf[0] = '\0';
@@ -454,7 +454,7 @@ do_validity_not_before( void *context,
                         long state_index,
                         unsigned char tag,
                         const void *value, 
-                        long vlen )
+                        size_t vlen )
 {
     wchar_t *ptr;
     char *p;
@@ -473,7 +473,7 @@ do_validity_not_after( void *context,
                        long state_index,
                        unsigned char tag,
                        const void *value,
-                       long vlen )
+                       size_t vlen )
 {
     wchar_t *ptr;
     char *p;
@@ -492,7 +492,7 @@ do_subject_public_key_info( void *context,
                             long state_index,
                             unsigned char tag,
                             const void *value, 
-                            long vlen )
+                            size_t vlen )
 {
     bufutil += swprintf_s(outbuf + bufutil,bufsize - bufutil, L"  Subject Public Key Algorithm: %ls\n", tmpbuf);
     tmpbuf[0] = '\0';
