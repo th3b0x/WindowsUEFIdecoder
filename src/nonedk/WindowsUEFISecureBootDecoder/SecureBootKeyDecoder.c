@@ -297,7 +297,7 @@ do_extension_id(void* context,
     wchar_t* val = 0;
     size_t size;
 
-    
+    /*
     size_t len = wcsnlen(tmpbuf, TMP_BUFF_SIZE);
     if (len > (90 * wrapno)) {
         // Not sure why a CR is now required in UDK2017.  Need to investigate
@@ -305,36 +305,36 @@ do_extension_id(void* context,
         FillTmpbuf(L"\n             ", catenate);
         wrapno++;
     }
-    
+    */
 
     oid = Lookup_OID(value, vlen);
     switch (oid)
     {
-    case OID_subjectKeyIdentifier: val = L"SubjectKeyIdentifier";
+    case OID_subjectKeyIdentifier: val = L"\n\t\tSubjectKeyIdentifier";
         break;
-    case OID_keyUsage: val = L"KeyUsage";
+    case OID_keyUsage: val = L"\n\t\tKeyUsage";
         break;
-    case OID_subjectAltName: val = L"SubjectAltName";
+    case OID_subjectAltName: val = L"\n\t\tSubjectAltName";
         break;
-    case OID_issuerAltName: val = L"IssuerAltName";
+    case OID_issuerAltName: val = L"\n\t\tIssuerAltName";
         break;
-    case OID_basicConstraints: val = L"BasicConstraints";
+    case OID_basicConstraints: val = L"\n\t\tBasicConstraints";
         break;
-    case OID_crlDistributionPoints: val = L"CrlDistributionPoints";
+    case OID_crlDistributionPoints: val = L"\n\t\tCrlDistributionPoints";
         break;
-    case OID_certAuthInfoAccess: val = L"CertAuthInfoAccess";
+    case OID_certAuthInfoAccess: val = L"\n\t\tCertAuthInfoAccess";
         break;
-    case OID_certPolicies: val = L"CertPolicies";
+    case OID_certPolicies: val = L"\n\t\tCertPolicies";
         break;
-    case OID_authorityKeyIdentifier: val = L"AuthorityKeyIdentifier";
+    case OID_authorityKeyIdentifier: val = L"\n\t\tAuthorityKeyIdentifier";
         break;
-    case OID_extKeyUsage: val = L"ExtKeyUsage";
+    case OID_extKeyUsage: val = L"\n\t\tExtKeyUsage";
         break;
-    case OID_msEnrollCerttypeExtension: val = L"msEnrollCertTypeExtension";
+    case OID_msEnrollCerttypeExtension: val = L"\n\t\tmsEnrollCertTypeExtension";
         break;
-    case OID_msCertsrvCAVersion: val = L"msCertsrvCAVersion";
+    case OID_msCertsrvCAVersion: val = L"\n\t\tmsCertsrvCAVersion";
         break;
-    case OID_msCertsrvPreviousCertHash: val = L"msCertsrvPreviousCertHash";
+    case OID_msCertsrvPreviousCertHash: val = L"\n\t\tmsCertsrvPreviousCertHash";
         break;
     default:
 
@@ -611,7 +611,8 @@ PrintCertificates( unsigned char *data,
             if ( CertList->SignatureSize > 100 ) {
                 CertFound = TRUE;
                 //outbuf[0] = '\0';
-                bufutil += swprintf_s(outbuf + bufutil, (bufsize - bufutil) , L"\n\nType: %ls  (GUID: %hs)\n", certType, &Cert->SignatureOwner.Data4); //TODO: warning C4477 : 'swprintf_s' : format string '%g' requires an argument of type 'double', but variadic argument 2 has type 'EFI_GUID *'
+                //bufutil += swprintf_s(outbuf + bufutil, (bufsize - bufutil) , L"\n\nType: %ls  (GUID: %hs)\n", certType, &Cert->SignatureOwner.Data4); //TODO: warning C4477 : 'swprintf_s' : format string '%g' requires an argument of type 'double', but variadic argument 2 has type 'EFI_GUID *'
+                bufutil += swprintf_s(outbuf + bufutil, (bufsize - bufutil), L"\n\nType: %ls  (GUID: %u)\n", certType, &Cert->SignatureOwner.Data1); 
                 //printf("%s", outbuf);
                 //outbuf[0] = '\0';
                 buflen  = CertList->SignatureSize - sizeof(EFI_GUID);
