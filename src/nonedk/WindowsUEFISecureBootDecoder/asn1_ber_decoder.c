@@ -28,32 +28,32 @@
 wchar_t tmpbuf[BUFF_SIZE];
 
 static const unsigned char asn1_op_lengths[ASN1_OP__NR] = {
-	/*					OPC TAG JMP ACT */
-	[ASN1_OP_MATCH]				= 1 + 1,
-	[ASN1_OP_MATCH_OR_SKIP]			= 1 + 1,
-	[ASN1_OP_MATCH_ACT]			= 1 + 1     + 1,
-	[ASN1_OP_MATCH_ACT_OR_SKIP]		= 1 + 1     + 1,
-	[ASN1_OP_MATCH_JUMP]			= 1 + 1 + 1,
-	[ASN1_OP_MATCH_JUMP_OR_SKIP]		= 1 + 1 + 1,
-	[ASN1_OP_MATCH_ANY]			= 1,
-	[ASN1_OP_MATCH_ANY_ACT]			= 1         + 1,
-	[ASN1_OP_COND_MATCH_OR_SKIP]		= 1 + 1,
-	[ASN1_OP_COND_MATCH_ACT_OR_SKIP]	= 1 + 1     + 1,
-	[ASN1_OP_COND_MATCH_JUMP_OR_SKIP]	= 1 + 1 + 1,
-	[ASN1_OP_COND_MATCH_ANY]		= 1,
-	[ASN1_OP_COND_MATCH_ANY_ACT]		= 1         + 1,
-	[ASN1_OP_COND_FAIL]			= 1,
-	[ASN1_OP_COMPLETE]			= 1,
-	[ASN1_OP_ACT]				= 1         + 1,
-	[ASN1_OP_RETURN]			= 1,
-	[ASN1_OP_END_SEQ]			= 1,
-	[ASN1_OP_END_SEQ_OF]			= 1     + 1,
-	[ASN1_OP_END_SET]			= 1,
-	[ASN1_OP_END_SET_OF]			= 1     + 1,
-	[ASN1_OP_END_SEQ_ACT]			= 1         + 1,
-	[ASN1_OP_END_SEQ_OF_ACT]		= 1     + 1 + 1,
-	[ASN1_OP_END_SET_ACT]			= 1         + 1,
-	[ASN1_OP_END_SET_OF_ACT]		= 1     + 1 + 1,
+/*           OPC                         TAG JMP ACT */
+	[ASN1_OP_MATCH]                     = 1 + 1,
+	[ASN1_OP_MATCH_OR_SKIP]             = 1 + 1,
+	[ASN1_OP_MATCH_ACT]                 = 1 + 1 + 1,
+	[ASN1_OP_MATCH_ACT_OR_SKIP]         = 1 + 1 + 1,
+	[ASN1_OP_MATCH_JUMP]                = 1 + 1 + 1,
+	[ASN1_OP_MATCH_JUMP_OR_SKIP]        = 1 + 1 + 1,
+	[ASN1_OP_MATCH_ANY]                 = 1,
+	[ASN1_OP_MATCH_ANY_ACT]             = 1 + 1,
+	[ASN1_OP_COND_MATCH_OR_SKIP]        = 1 + 1,
+	[ASN1_OP_COND_MATCH_ACT_OR_SKIP]    = 1 + 1 + 1,
+	[ASN1_OP_COND_MATCH_JUMP_OR_SKIP]   = 1 + 1 + 1,
+	[ASN1_OP_COND_MATCH_ANY]            = 1,
+	[ASN1_OP_COND_MATCH_ANY_ACT]        = 1 + 1,
+	[ASN1_OP_COND_FAIL]                 = 1,
+	[ASN1_OP_COMPLETE]                  = 1,
+	[ASN1_OP_ACT]                       = 1 + 1,
+	[ASN1_OP_RETURN]                    = 1,
+	[ASN1_OP_END_SEQ]                   = 1,
+	[ASN1_OP_END_SEQ_OF]                = 1 + 1,
+	[ASN1_OP_END_SET]                   = 1,
+	[ASN1_OP_END_SET_OF]                = 1 + 1,
+	[ASN1_OP_END_SEQ_ACT]               = 1 + 1,
+	[ASN1_OP_END_SEQ_OF_ACT]            = 1 + 1 + 1,
+	[ASN1_OP_END_SET_ACT]               = 1 + 1,
+	[ASN1_OP_END_SET_OF_ACT]            = 1 + 1 + 1
 };
 
 
@@ -66,8 +66,8 @@ static const unsigned char asn1_op_lengths[ASN1_OP__NR] = {
  * @_errmsg: Where to return a pointer to an error message on error
  */
 static int asn1_find_indefinite_length(const unsigned char *data, size_t datalen,
-				       size_t *_dp, size_t *_len,
-				       const char **_errmsg)
+					   size_t *_dp, size_t *_len,
+					   const char **_errmsg)
 {
 	unsigned char tag, tmp;
 	size_t dp = *_dp, len, n;
@@ -135,7 +135,7 @@ static int asn1_find_indefinite_length(const unsigned char *data, size_t datalen
 
 	n = len - 0x80;
 	//if (unlikely(n > sizeof(size_t) - 1))
-	if (n > (sizeof(size_t) - 1))
+	if (n > (sizeof(size_t) - 1) )
 	{
 		goto length_too_long;
 	}
@@ -153,7 +153,7 @@ static int asn1_find_indefinite_length(const unsigned char *data, size_t datalen
 
 	/* 
 	 *  FPM - have not touched these messages. need to study code path.
-	 *        if you get garbled output, these may be the culprits
+	 *		if you get garbled output, these may be the culprits
 	 * 
 	 */
 	length_too_long:
@@ -201,9 +201,9 @@ static int asn1_find_indefinite_length(const unsigned char *data, size_t datalen
  *	what members of the set have been seen is a pain.
  */
 int asn1_ber_decoder(const struct asn1_decoder *decoder,
-		     void *context,
-		     const unsigned char *data,
-		     size_t datalen)
+			 void *context,
+			 const unsigned char *data,
+			 size_t datalen)
 {
 	const unsigned char *machine = decoder->machine;
 	const asn1_action_t *actions = decoder->actions;
@@ -242,6 +242,7 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 		goto machine_overrun_error;
 	}
 	op = machine[pc];
+
 	//if (unlikely(pc + asn1_op_lengths[op] > machlen))
 	if ((pc + asn1_op_lengths[op]) > machlen)
 	{
@@ -251,13 +252,14 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 	/* If this command is meant to match a tag, then do that before
 	 * evaluating the command.
 	 */
-	if (op <= ASN1_OP__MATCHES_TAG) {
+	if (op <= ASN1_OP__MATCHES_TAG) 
+	{
 		unsigned char tmp;
 
 		/* Skip conditional matches if possible */
-		if ((op & ASN1_OP_MATCH__COND &&
-		     flags & FLAG_MATCHED) ||
-		    dp == datalen) {
+		if ( ((op & ASN1_OP_MATCH__COND) && (flags & FLAG_MATCHED)
+			) || (dp == datalen) ) 
+		{
 			pc += asn1_op_lengths[op];
 			goto next_op;
 		}
@@ -278,11 +280,14 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 			goto long_tag_not_supported;
 		}
 
+		/*
 		if (op & ASN1_OP_MATCH__ANY) 
 		{
-			;
+			;	//I dislike hanging semicolons, should examine this block's purpose
 		} 
-		else 
+		else
+		//*/
+		if(!(op & ASN1_OP_MATCH__ANY))
 		{
 			/* Extract the tag from the machine
 			 * - Either CONS or PRIM are permitted in the data if
@@ -329,7 +334,7 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 				}
 			} 
 			else {
-				int n = len - 0x80;
+				size_t n = len - 0x80;
 				//if (unlikely(n > 2))
 				if (n > 2)
 				{
@@ -596,8 +601,8 @@ int asn1_ber_decoder(const struct asn1_decoder *decoder,
 		Errmsg = L"Long tag not supported";
 	error:
 		memset(tmpbuf, 0, BUFF_SIZE);
-        sprintf_s(tmpbuf,BUFF_SIZE,L"ERROR: %ls\n", Errmsg);
-		printf_s("%s", tmpbuf);
+		swprintf_s(tmpbuf,BUFF_SIZE,L"ERROR: %ls\n", Errmsg);
+		printf_s("%ls", tmpbuf);
 	return -EBADMSG;
 }
 
