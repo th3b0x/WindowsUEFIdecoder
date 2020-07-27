@@ -17,6 +17,7 @@
  */
 
 #include "UefiBaseType.h"
+#include <unicode/ustdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -115,7 +116,7 @@ Lookup_OID(const void *data, size_t datasize)
  * and -ENOBUFS if the buffer was too small.
  */
 int 
-Sprint_OID(const void *data, size_t datasize, wchar_t *buffer, long bufsize)
+Sprint_OID(const void *data, size_t datasize, UChar *buffer, long bufsize)
 {
     unsigned char* cpy_data = calloc(datasize + 1, sizeof(unsigned char));
     memcpy_s(cpy_data, (datasize + 1), data, datasize);
@@ -127,7 +128,7 @@ Sprint_OID(const void *data, size_t datasize, wchar_t *buffer, long bufsize)
     long ret;
     int count;
     int bufutil = 0;
-    wchar_t* index = buffer;
+    char* index = buffer;
     long origsize = bufsize;
     if (v >= end)
     {
@@ -135,7 +136,8 @@ Sprint_OID(const void *data, size_t datasize, wchar_t *buffer, long bufsize)
     }
 
     n = (unsigned char)*v++;
-    count = swprintf_s(buffer, bufsize, L"%d.%d", n / 40, n % 40);
+    //count = swprintf_s(buffer, bufsize, "%d.%d", n / 40, n % 40);
+    count = u_sprintf(buffer, "%d.%d", n / 40, n % 40);
     //ret = count = strlen(buffer);
     ret = bufutil += count;
     //buffer += count; //TODO: I suspect this pointer arithmetic is what is causing the heap corruption
@@ -162,7 +164,8 @@ Sprint_OID(const void *data, size_t datasize, wchar_t *buffer, long bufsize)
                 num |= n & 0x7f;
             } while (n & 0x80);
         }
-        count = swprintf_s((buffer + bufutil), bufsize, L".%ld", num);
+        count = u_sprintf(buffer, ".%ld", num);
+        //count = swprintf_s((buffer + bufutil), bufsize, ".%ld", num);
         
         //ret += count = strlen(buffer);
         ret = bufutil += count;

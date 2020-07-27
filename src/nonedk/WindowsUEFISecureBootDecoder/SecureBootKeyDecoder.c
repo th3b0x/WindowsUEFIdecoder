@@ -7,6 +7,8 @@
 //
 
 #include "UefiBaseType.h"
+#include <unicode/ustdio.h>
+#include <unicode/unistr.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -30,15 +32,16 @@
 #define DO_ATTRIBUTE_TYPE_BUFF 120
 
 // temporary store for output text
-wchar_t tmpbuf[TMP_BUFF_SIZE];
-wchar_t outbuf[BUFF_SIZE];
+UChar tmpbuf[TMP_BUFF_SIZE];
+UChar outbuf[BUFF_SIZE];
 unsigned int bufsize = BUFF_SIZE;
 unsigned int bufutil;
 unsigned int tmpsize = TMP_BUFF_SIZE;
 unsigned int tmputil;
+char* bufptr = tmpbuf;
 
 
-wchar_t cert_buff[CERT_BUFF];
+char cert_buff[CERT_BUFF];
 unsigned int certbuff = CERT_BUFF;
 size_t wrapno = 1;
 unsigned int sizeofchar = sizeof(char);
@@ -49,11 +52,11 @@ unsigned int sizeofchar = sizeof(char);
  * Function prototypes to make it easier to inventory, track, and document program structure
  */
 void fix_print_output();
-void FillTmpbuf(wchar_t* data, int catenate);
+void FillTmpbuf(char* data, int catenate);
 int CompareGuid(GUID* first, GUID* second);
-wchar_t* AsciiToUnicode(const char* Str, size_t Len);
+char* AsciiToUnicode(const char* Str, size_t Len);
 char* make_utc_date_string(char* s);
-void GetCertType(GUID* certGUID, wchar_t** typeName);
+void GetCertType(GUID* certGUID, char** typeName);
 /*start sourced from x509.h*/
 int do_algorithm(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
 int do_attribute_type(void* context, long state_index, unsigned char tag, const void* value, size_t vlen);
@@ -87,13 +90,19 @@ void fix_print_output()
     outbuf[bufutil] = 0;
 }
 
-void FillTmpbuf(wchar_t* data, int catenate)
+void FillTmpbuf(char* data, int catenate)
 {
+    unsigned int added = 0;
     if (catenate == 0)
     {
         tmputil = 0;
+        bufptr = tmpbuf;
     }
-    tmputil += swprintf_s(tmpbuf + tmputil, tmpsize - tmputil, L"%ls", data);
+    added = u_sprintf(tmpbuf, "%s", data);
+    //added = u_sprintf(bufptr, "%s", data);
+    tmputil += added;
+    bufptr += added;
+    //tmputil += u_sprintf(tmpbuf + tmputil, tmpsize - tmputil, "%s", data);
 }
 
 int CompareGuid(GUID *first, GUID *second)
@@ -111,12 +120,12 @@ int CompareGuid(GUID *first, GUID *second)
     return mismatchIndex;
 }
 
-wchar_t*
+char*
 AsciiToUnicode(const char* Str,
     size_t Len)
 {
-    wchar_t *Ret = NULL;
-    Ret = calloc(Len, sizeof(wchar_t));
+    char *Ret = NULL;
+    Ret = calloc(Len, sizeof(char));
 
     if (!Ret)
         return NULL;
@@ -165,7 +174,7 @@ make_utc_date_string(char* s)
     return buffer;
 }
 
-void GetCertType(GUID* certGUID, wchar_t** typeName)
+void GetCertType(GUID* certGUID, char** typeName)
 {
     EFI_GUID gX509 = EFI_CERT_X509_GUID;
     EFI_GUID gPKCS7 = EFI_CERT_TYPE_PKCS7_GUID;
@@ -181,39 +190,39 @@ void GetCertType(GUID* certGUID, wchar_t** typeName)
     EFI_GUID gX509SHA384 = EFI_CERT_X509_SHA384_GUID;
     EFI_GUID gX509SHA512 = EFI_CERT_X509_SHA512_GUID;
     
-    wchar_t* type;
+    char* type;
 
     if (CompareGuid(certGUID, &gX509) == 0)
-        type = L"X509";
+        type = "X509";
     else if (CompareGuid(certGUID, &gPKCS7) == 0)
-        type = L"PKCS7";
+        type = "PKCS7";
     else if (CompareGuid(certGUID, &gRSA2048) == 0)
-        type = L"RSA2048";
+        type = "RSA2048";
     else if (CompareGuid(certGUID, &gSHA256) == 0)
-        type = L"SHA256";
+        type = "SHA256";
     else if (CompareGuid(certGUID, &gRSA2048SHA256) == 0)
-        type = L"RSA2048SHA256";
+        type = "RSA2048SHA256";
     else if (CompareGuid(certGUID, &gSHA1) == 0)
-        type = L"SHA1";
+        type = "SHA1";
     else if (CompareGuid(certGUID, &gRSA2048SHA1) == 0)
-        type = L"RSA2048SHA1";
+        type = "RSA2048SHA1";
     else if (CompareGuid(certGUID, &gSHA224) == 0)
-        type = L"SHA224";
+        type = "SHA224";
     else if (CompareGuid(certGUID, &gSHA384) == 0)
-        type = L"SHA384";
+        type = "SHA384";
     else if (CompareGuid(certGUID, &gSHA512) == 0)
-        type = L"SHA512";
+        type = "SHA512";
     else if (CompareGuid(certGUID, &gX509SHA256) == 0)
-        type = L"X509SHA256";
+        type = "X509SHA256";
     else if (CompareGuid(certGUID, &gX509SHA384) == 0)
-        type = L"X509SHA384";
+        type = "X509SHA384";
     else if (CompareGuid(certGUID, &gX509SHA512) == 0)
-        type = L"X509SHA512";
+        type = "X509SHA512";
     else
-        type = L"UNKNOWN";
+        type = "UNKNOWN";
     
     
-    swprintf_s(*typeName, certbuff, L"%ls", type);
+    u_sprintf(*typeName, "%s", type);
 }
 
 int
@@ -226,48 +235,49 @@ do_algorithm(void* context,
     enum OID oid;
     int catenate = 0;
 
-    wchar_t buffer[DO_ALGORITHM_BUFF];
-    wchar_t* val = 0;
+    UChar buffer[DO_ALGORITHM_BUFF];
+    char* val = 0;
     size_t size;
     
     oid = Lookup_OID(value, vlen);
     
     switch (oid)
     {
-    case OID_id_dsa_with_sha1: val = L"id_dsa_with_sha1";
+    case OID_id_dsa_with_sha1: val = "id_dsa_with_sha1";
         break;
-    case OID_id_dsa: val = L"id_dsa";
+    case OID_id_dsa: val = "id_dsa";
         break;
-    case OID_id_ecdsa_with_sha1: val = L"id_ecdsa_with_sha1";
+    case OID_id_ecdsa_with_sha1: val = "id_ecdsa_with_sha1";
         break;
-    case OID_id_ecPublicKey: val = L"id_ecPublicKey";
+    case OID_id_ecPublicKey: val = "id_ecPublicKey";
         break;
-    case OID_rsaEncryption: val = L"rsaEncryption";
+    case OID_rsaEncryption: val = "rsaEncryption";
         break;
-    case OID_md2WithRSAEncryption: val = L"md2WithRSAEncryption";
+    case OID_md2WithRSAEncryption: val = "md2WithRSAEncryption";
         break;
-    case OID_md3WithRSAEncryption: val = L"md3WithRSAEncryption";
+    case OID_md3WithRSAEncryption: val = "md3WithRSAEncryption";
         break;
-    case OID_md4WithRSAEncryption: val = L"md4WithRSAEncryption";
+    case OID_md4WithRSAEncryption: val = "md4WithRSAEncryption";
         break;
-    case OID_sha1WithRSAEncryption: val = L"sha1WithRSAEncryption";
+    case OID_sha1WithRSAEncryption: val = "sha1WithRSAEncryption";
         break;
-    case OID_sha256WithRSAEncryption: val = L"sha256WithRSAEncryption";
+    case OID_sha256WithRSAEncryption: val = "sha256WithRSAEncryption";
         break;
-    case OID_sha384WithRSAEncryption: val = L"sha384WithRSAEncryption";
+    case OID_sha384WithRSAEncryption: val = "sha384WithRSAEncryption";
         break;
-    case OID_sha512WithRSAEncryption: val = L"sha512WithRSAEncryption";
+    case OID_sha512WithRSAEncryption: val = "sha512WithRSAEncryption";
         break;
-    case OID_sha224WithRSAEncryption: val = L"sha224WithRSAEncryption";
+    case OID_sha224WithRSAEncryption: val = "sha224WithRSAEncryption";
         break;
     default:
         catenate = 1;
         
         memset(buffer, 0, DO_ALGORITHM_BUFF);
         Sprint_OID(value, vlen, buffer, DO_ALGORITHM_BUFF);
-        size = wcsnlen_s(buffer, DO_ALGORITHM_BUFF);
+        //size = wcsnlen_s(buffer, DO_ALGORITHM_BUFF);
+        size = u_strlen(buffer);
 
-        val = calloc(size + 4, sizeof(wchar_t));
+        val = calloc(size + 4, sizeof(UChar));
         memcpy_s((val + 2), size, buffer, size);
         val[0] = 32; // ' '
         val[1] = 40; // '('
@@ -293,16 +303,16 @@ do_extension_id(void* context,
     enum OID oid;
     int catenate = 1;
 
-    wchar_t buffer[DO_EXTENSION_ID_BUFF];
-    wchar_t* val = 0;
+    UChar buffer[DO_EXTENSION_ID_BUFF];
+    char* val = 0;
     size_t size;
 
     /*
     size_t len = wcsnlen(tmpbuf, TMP_BUFF_SIZE);
     if (len > (90 * wrapno)) {
         // Not sure why a CR is now required in UDK2017.  Need to investigate
-        //FillTmpbuf(L"\r\n             ", catenate);
-        FillTmpbuf(L"\n             ", catenate);
+        //FillTmpbuf("\r\n             ", catenate);
+        FillTmpbuf("\n             ", catenate);
         wrapno++;
     }
     */
@@ -310,39 +320,41 @@ do_extension_id(void* context,
     oid = Lookup_OID(value, vlen);
     switch (oid)
     {
-    case OID_subjectKeyIdentifier: val = L"\n\t\tSubjectKeyIdentifier";
+    case OID_subjectKeyIdentifier: val = "\n\t\tSubjectKeyIdentifier";
         break;
-    case OID_keyUsage: val = L"\n\t\tKeyUsage";
+    case OID_keyUsage: val = "\n\t\tKeyUsage";
         break;
-    case OID_subjectAltName: val = L"\n\t\tSubjectAltName";
+    case OID_subjectAltName: val = "\n\t\tSubjectAltName";
         break;
-    case OID_issuerAltName: val = L"\n\t\tIssuerAltName";
+    case OID_issuerAltName: val = "\n\t\tIssuerAltName";
         break;
-    case OID_basicConstraints: val = L"\n\t\tBasicConstraints";
+    case OID_basicConstraints: val = "\n\t\tBasicConstraints";
         break;
-    case OID_crlDistributionPoints: val = L"\n\t\tCrlDistributionPoints";
+    case OID_crlDistributionPoints: val = "\n\t\tCrlDistributionPoints";
         break;
-    case OID_certAuthInfoAccess: val = L"\n\t\tCertAuthInfoAccess";
+    case OID_certAuthInfoAccess: val = "\n\t\tCertAuthInfoAccess";
         break;
-    case OID_certPolicies: val = L"\n\t\tCertPolicies";
+    case OID_certPolicies: val = "\n\t\tCertPolicies";
         break;
-    case OID_authorityKeyIdentifier: val = L"\n\t\tAuthorityKeyIdentifier";
+    case OID_authorityKeyIdentifier: val = "\n\t\tAuthorityKeyIdentifier";
         break;
-    case OID_extKeyUsage: val = L"\n\t\tExtKeyUsage";
+    case OID_extKeyUsage: val = "\n\t\tExtKeyUsage";
         break;
-    case OID_msEnrollCerttypeExtension: val = L"\n\t\tmsEnrollCertTypeExtension";
+    case OID_msEnrollCerttypeExtension: val = "\n\t\tmsEnrollCertTypeExtension";
         break;
-    case OID_msCertsrvCAVersion: val = L"\n\t\tmsCertsrvCAVersion";
+    case OID_msCertsrvCAVersion: val = "\n\t\tmsCertsrvCAVersion";
         break;
-    case OID_msCertsrvPreviousCertHash: val = L"\n\t\tmsCertsrvPreviousCertHash";
+    case OID_msCertsrvPreviousCertHash: val = "\n\t\tmsCertsrvPreviousCertHash";
         break;
     default:
 
         memset(buffer, 0, DO_EXTENSION_ID_BUFF);
         Sprint_OID(value, vlen, buffer, DO_EXTENSION_ID_BUFF);
-        size = wcsnlen_s(buffer, DO_EXTENSION_ID_BUFF);
-
-        val = calloc(size + 4, sizeof(wchar_t));
+        //size = wcsnlen_s(buffer, DO_EXTENSION_ID_BUFF);
+        size = u_strlen(buffer);
+        unsigned int alloc = (size + 4) * sizeof(UChar);
+        val = calloc(size + 4, sizeof(UChar));
+        memset(val, 32, alloc);
         memcpy_s((val + 2), size, buffer, size);
         val[0] = 32; // ' '
         val[1] = 40; // '('
@@ -367,31 +379,32 @@ do_attribute_type(void* context,
     enum OID oid;
     int catenate = 1;
 
-    wchar_t buffer[DO_ATTRIBUTE_TYPE_BUFF];
-    wchar_t* val = 0;
+    UChar buffer[DO_ATTRIBUTE_TYPE_BUFF];
+    char* val = 0;
     size_t size;
     
     oid = Lookup_OID(value, vlen);
     
     switch (oid)
     {
-    case OID_countryName: val = L" C=";
+    case OID_countryName: val = " C=";
         break;
-    case OID_stateOrProvinceName: val = L" ST=";
+    case OID_stateOrProvinceName: val = " ST=";
         break;
-    case OID_locality: val = L" L=";
+    case OID_locality: val = " L=";
         break;
-    case OID_organizationName: val = L" O=";
+    case OID_organizationName: val = " O=";
         break;
-    case OID_commonName: val = L" CN=";
+    case OID_commonName: val = " CN=";
         break;
     default:
 
         memset(buffer, 0, DO_ATTRIBUTE_TYPE_BUFF);
         Sprint_OID(value, vlen, buffer, DO_ATTRIBUTE_TYPE_BUFF);
-        size = wcsnlen_s(buffer, DO_ATTRIBUTE_TYPE_BUFF);
+        //size = wcsnlen_s(buffer, DO_ATTRIBUTE_TYPE_BUFF);
+        size = u_strlen(buffer);
 
-        val = calloc(size + 4, sizeof(wchar_t));
+        val = calloc(size + 4, sizeof(UChar));
         memcpy_s((val + 2), size, buffer, size);
         val[0] = 32; // ' '
         val[1] = 40; // '('
@@ -416,7 +429,7 @@ do_version( void *context,
 {
     int Version = *(const char *)value;
 
-    bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"\tVersion: %d (0x%02x) ", Version + 1, Version);
+    bufutil += u_sprintf(outbuf, "\tVersion: %d (0x%02x) ", Version + 1, Version);
 
     return 0;
 }
@@ -429,9 +442,9 @@ do_signature( void *context,
               const void *value,
               size_t vlen )
 {
-    bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"\n\tSignature Algorithm: %ls\n", tmpbuf);
-    
-    tmpbuf[0] = '\0';
+    bufutil += u_sprintf(outbuf, "\n\tSignature Algorithm: %s\n", tmpbuf);
+    memset(tmpbuf, 0, TMP_BUFF_SIZE);
+    //tmpbuf[0] = '\0';
     tmputil = 0;
 
     return 0;
@@ -445,16 +458,16 @@ do_serialnumber( void *context,
                  const void *value, 
                  size_t vlen )
 {
-    wchar_t *p = 0; 
+    char *p = 0; 
     p = AsciiToUnicode(value,strlen(value));
 
-    bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"\tSerial Number: ");
+    bufutil += u_sprintf(outbuf, "\tSerial Number: ");
     if (vlen > 4) {
         for (size_t i = 0; i < vlen; i++, p++) {
-            bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"%02x%wc", *p, ((i + 1 == vlen) ? ' ' : ':'));
+            bufutil += u_sprintf(outbuf, "%02x%wc", *p, ((i + 1 == vlen) ? ' ' : ':'));
         }
     }
-    bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"%ls", L"\n");
+    bufutil += u_sprintf(outbuf, "%s", "\n");
 
     return 0;
 }
@@ -467,9 +480,9 @@ do_issuer( void *context,
            const void *value,
            size_t vlen )
 {
-    bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"\tIssuer: %ls\n", tmpbuf);
-    
-    tmpbuf[0] = '\0';
+    bufutil += u_sprintf(outbuf, "\tIssuer: %s\n", tmpbuf);
+    memset(tmpbuf, 0, TMP_BUFF_SIZE);
+    //tmpbuf[0] = '\0';
     tmputil = 0;
 
     return 0;
@@ -483,9 +496,9 @@ do_subject( void *context,
             const void *value,
             size_t vlen )
 {
-    bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"\tSubject:%ls\n", tmpbuf);
-    
-    tmpbuf[0] = '\0';
+    bufutil += u_sprintf(outbuf, "\tSubject:%s\n", tmpbuf);
+    memset(tmpbuf, 0, TMP_BUFF_SIZE);
+    //tmpbuf[0] = '\0';
     tmputil = 0;
 
     return 0;
@@ -499,7 +512,7 @@ do_attribute_value( void *context,
                     const void *value,
                     size_t vlen )
 {
-    wchar_t *ptr;
+    char *ptr;
 
     ptr = AsciiToUnicode(value, vlen);
     FillTmpbuf(ptr, 1);
@@ -516,9 +529,9 @@ do_extensions( void *context,
                const void *value,
                size_t vlen )
 {
-    bufutil += swprintf_s(outbuf + bufutil,bufsize - bufutil, L"\tExtensions:%ls\n", tmpbuf);
-    
-    tmpbuf[0] = '\0';
+    bufutil += u_sprintf(outbuf, "\tExtensions:%s\n", tmpbuf);
+    memset(tmpbuf, 0, TMP_BUFF_SIZE);
+    //tmpbuf[0] = '\0';
     tmputil = 0;
     wrapno = 1;
 
@@ -532,12 +545,12 @@ do_validity_not_before( void *context,
                         const void *value, 
                         size_t vlen )
 {
-    wchar_t *ptr;
+    char *ptr;
     char *p;
 
     p = make_utc_date_string((char *)value);
     ptr = AsciiToUnicode(p, UTCDATE_LEN);
-    bufutil += swprintf_s(outbuf + bufutil,bufsize - bufutil, L"\n\tValidity:  Not Before: %ls\n", ptr);
+    bufutil += u_sprintf(outbuf, "\n\tValidity:  Not Before: %s\n", ptr);
     free(ptr);
 
     return 0;
@@ -551,12 +564,12 @@ do_validity_not_after( void *context,
                        const void *value,
                        size_t vlen )
 {
-    wchar_t *ptr;
+    char *ptr;
     char *p;
 
     p = make_utc_date_string((char *)value);
     ptr = AsciiToUnicode(p, UTCDATE_LEN);
-    bufutil += swprintf_s(outbuf + bufutil,bufsize - bufutil, L"\n\tNot After: %ls\n", ptr);
+    bufutil += u_sprintf(outbuf, "\n\tNot After: %s\n", ptr);
     free(ptr);
 
     return 0;
@@ -570,9 +583,9 @@ do_subject_public_key_info( void *context,
                             const void *value, 
                             size_t vlen )
 {
-    bufutil += swprintf_s(outbuf + bufutil,bufsize - bufutil, L"\n\tSubject Public Key Algorithm: %ls\n", tmpbuf);
-    
-    tmpbuf[0] = '\0';
+    bufutil += u_sprintf(outbuf, "\n\tSubject Public Key Algorithm: %s\n", tmpbuf);
+    memset(tmpbuf, 0, TMP_BUFF_SIZE);
+    //tmpbuf[0] = '\0';
     tmputil = 0;
 
     return 0;
@@ -587,7 +600,7 @@ PrintCertificates( unsigned char *data,
 	
     EFI_SIGNATURE_LIST *CertList = (EFI_SIGNATURE_LIST *)data;
     EFI_SIGNATURE_DATA *Cert;
-    wchar_t *certType = calloc(certbuff, sizeof(wchar_t));
+    char *certType = calloc(certbuff, sizeof(char));
     BOOLEAN  CertFound = FALSE;
     unsigned int    DataSize = len;
     unsigned int    CertCount = 0;
@@ -611,14 +624,14 @@ PrintCertificates( unsigned char *data,
             if ( CertList->SignatureSize > 100 ) {
                 CertFound = TRUE;
                 //outbuf[0] = '\0';
-                //bufutil += swprintf_s(outbuf + bufutil, (bufsize - bufutil) , L"\n\nType: %ls  (GUID: %hs)\n", certType, &Cert->SignatureOwner.Data4); //TODO: warning C4477 : 'swprintf_s' : format string '%g' requires an argument of type 'double', but variadic argument 2 has type 'EFI_GUID *'
-                bufutil += swprintf_s(outbuf + bufutil, (bufsize - bufutil), L"\n\nType: %ls  (GUID: %u)\n", certType, &Cert->SignatureOwner.Data1); 
+                //bufutil += u_sprintf(outbuf, "\n\nType: %s  (GUID: %s)\n", certType, &Cert->SignatureOwner.Data4); //TODO: warning C4477 : 'u_sprintf' : format string '%g' requires an argument of type 'double', but variadic argument 2 has type 'EFI_GUID *'
+                bufutil += u_sprintf(outbuf, "\n\nType: %s  (GUID: %u)\n", certType, &Cert->SignatureOwner.Data1); 
                 //printf("%s", outbuf);
                 //outbuf[0] = '\0';
                 buflen  = CertList->SignatureSize - sizeof(EFI_GUID);
                 status = asn1_ber_decoder(&x509_decoder, NULL, Cert->SignatureData, buflen); //x509_decoder from x509.h, which loads functions above (clever)
                 fix_print_output();
-                wprintf(L"%s\n", outbuf);
+                u_printf_u("%s\n", outbuf);
                 memset(outbuf, 0, bufsize);
                 bufutil = 0;
             }
@@ -703,15 +716,15 @@ EFI_STATUS OutputVariable( char *filepath)
         
     } else if (Status == EFI_NOT_FOUND) {
         memset(outbuf, 0, bufsize);
-        bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"ERROR: Failed to get open %hs. Status Code: %I64d\n", filepath, Status);
-        printf("%ls", outbuf);
+        bufutil += u_sprintf(outbuf, "ERROR: Failed to get open %s. Status Code: %I64d\n", filepath, Status);
+        printf("%s", outbuf);
         return Status;
     }
     else
     {
         memset(outbuf, 0, bufsize);
-        bufutil += swprintf_s(outbuf + bufutil, bufsize - bufutil, L"ERROR: Failed to get open %hs. Status Code: %I64d\n", filepath, Status);
-        printf("%ls", outbuf);
+        bufutil += u_sprintf(outbuf, "ERROR: Failed to get open %s. Status Code: %I64d\n", filepath, Status);
+        printf("%s", outbuf);
     }
 	free( Data );
 
